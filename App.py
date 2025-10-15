@@ -207,7 +207,6 @@ def page_eda():
     # Ruta local por defecto: MISMO DIRECTORIO que app.py (evita problemas de backslashes)
     LOCAL_PATH = APP_DIR / FILENAME
 
-    st.title("Demo: Carga optimizada con Parquet")
 
     # ---------- Resolución de la ruta ----------
     if DATA_URL:
@@ -1171,6 +1170,7 @@ ROUTES = {
 }
 
 ROUTES[choice]()
+
 
 
 
