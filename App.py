@@ -18,6 +18,8 @@ import glob
 import hashlib
 from pathlib import Path
 import requests 
+from scipy.stats import kstest, spearmanr, chi2_contingency, norm   
+
 
 
 st.set_page_config(page_title="Análisis Exploratorio del Rendimiento Académico de Estudiantes Universitarios",
@@ -206,7 +208,6 @@ def page_eda():
 
     # Ruta local por defecto: MISMO DIRECTORIO que app.py (evita problemas de backslashes)
     LOCAL_PATH = APP_DIR / FILENAME
-
 
     # ---------- Resolución de la ruta ----------
     if DATA_URL:
@@ -1134,7 +1135,509 @@ def page_eda():
                     """)    
 
 
+    # =========================
+    # Construir tabla formateada y styler
+    # =========================
+    def construir_tabla_formateada(df: pd.DataFrame):
+        orden_rend = ["Deficiente", "Bajo", "Medio", "Alto", "Superior"]
+        rend_cat = pd.CategoricalDtype(categories=orden_rend, ordered=True)
+
+        d = df.copy()
+        d["Rendimiento"] = d["Rendimiento"].astype(rend_cat)
+
+        # Promedios por rendimiento (Año, Periodo)
+        pivot_mean = (
+            d.pivot_table(
+                values="Nota Final",
+                index=["Año", "Periodo"],
+                columns="Rendimiento",
+                aggfunc="mean"
+            )
+            .reindex(columns=orden_rend)
+        )
+
+        # Conteos por rendimiento (para %)
+        pivot_cnt = (
+            d.pivot_table(
+                values="Nota Final",
+                index=["Año", "Periodo"],
+                columns="Rendimiento",
+                aggfunc="count"
+            )
+            .reindex(columns=orden_rend)
+            .fillna(0)
+            .astype(int)
+        )
+
+        # % por fila
+        row_totals = pivot_cnt.sum(axis=1)
+        pct = pivot_cnt.div(row_totals.replace(0, np.nan), axis=0) * 100
+        pct = pct.fillna(0)
+
+        # Armar "promedio (porcentaje%)"
+        tabla_fmt = pd.DataFrame(index=pivot_mean.index)
+        for col in orden_rend:
+            mean_col = pivot_mean[col].round(2)
+            pct_col = pct[col].round(1)
+            tabla_fmt[col] = (
+                mean_col.fillna(0).map("{:.2f}".format)
+                + " ("
+                + pct_col.fillna(0).map("{:.1f}%".format)
+                + ")"
+            )
+
+        tabla_fmt = tabla_fmt.reset_index()
+
+        # MultiIndex de encabezado
+        tabla_fmt.columns = pd.MultiIndex.from_tuples(
+            [("", "Año"), ("", "Periodo")] + [("Rendimiento Académico", c) for c in orden_rend]
+        )
+
+        # Styler (blanco y negro sobrio)
+        styled = (
+            tabla_fmt.style
+            .set_table_styles([
+                {"selector": "caption", "props": [("text-align", "center"),
+                                                ("font-weight", "bold"),
+                                                ("font-size", "14px")]},
+                {"selector": "th", "props": [("text-align", "center"),
+                                            ("font-weight", "bold"),
+                                            ("border", "1px solid black")]},
+                {"selector": "td", "props": [("text-align", "center"),
+                                            ("border", "1px solid black")]}
+            ], overwrite=False)
+            .hide(axis="index")
+        )
+
+        return tabla_fmt, styled, pivot_mean.round(2), pct.round(1)
+
+
+    # Construir 
+    try:
+        tabla_fmt, styled, pivot_mean, pct = construir_tabla_formateada(df)
+    except Exception as e:
+        st.error(f"Ocurrió un error al construir la tabla. Verifica columnas y tipos. Detalle: {e}")
+        st.stop()
+
+    # selección para vista
+    ver_interactiva = st.radio(
+        "Modo de visualización",
+        ["Interactiva (st.dataframe)", "HTML estilizado (to_html)"],
+        index=0
+    )
+    
+    # Mostrar
+    if ver_interactiva.startswith("Interactiva"):
+        st.dataframe(tabla_fmt, use_container_width=True, height=500)
+    else:
+        st.markdown(styled.to_html(), unsafe_allow_html=True)
+
+#------------------------------------------------------------------------------------------------------------------------------------------------------------------------    
+
+#------------------------------------------------------------------------------------------------------------------------------------------------------------------------
+    st.markdown("""
+                <div
+                    <h2 style='color:#111111; font-weight:600; font-size:30px; margin:18px 0 6px 0;'>3.7.PRUEBA DE NORMALIDAD: KOLMOGOROV-SMIRNOV</h2>
+                    <br>
+                </div>
+                """, unsafe_allow_html=True)     
+ 
+    st.markdown("""
+                    <div>
+                    <p style='color:#444444; text-align:justify; font-size:20px; margin:0 0 12px 0;'> 
+                    La siguiente tabla presenta los resultados de la prueba de normalidad (Kolmogorov-Smirnov) aplicada a las variables relacionadas con el Record de Notas. En ella se muestran el estadístico de prueba, el valor p asociado y la interpretación correspondiente sobre la normalidad de los datos.                    
+                    </P>
+                    </div>
+                    """, unsafe_allow_html=True)   
+    
+    st.markdown("""
+                    
+                    """) 
+
+    # ==============================================
+    # Prueba de normalidad Kolmogorov-Smirnov
+    # ==============================================
+
+    # Lista de variables a evaluar
+    variables = ["Nota 1", "Nota 2", "Nota 3",
+                "Nota 4", "Nota Definitiva",
+                "Nota Habilitación", "Nota Final"]
+
+    # Contenedor de resultados
+    resultados = []
+
+    for var in variables:
+        datos = df[var].dropna()
+
+        if len(datos) < 5:
+            resultados.append({
+                "Variable": var,
+                "KS Statistic": None,
+                "p-valor": None,
+                "Interpretación": "Insuficientes datos"
+            })
+            continue
+
+        # Estandarizar los datos (media 0, varianza 1)
+        datos_std = (datos - datos.mean()) / datos.std(ddof=0)
+
+        # Prueba KS contra N(0,1)
+        ks_stat, p_value = kstest(datos_std, 'norm')
+
+        resultados.append({
+            "Variable": var,
+            "KS Statistic": ks_stat,
+            "p-valor": p_value,
+            "Interpretación": (
+                "✅ No se rechaza normalidad" if p_value > 0.05 
+                else "❌ Se rechaza normalidad"
+            )
+        })
+
+    # Convertir resultados a DataFrame
+    resultados_df = pd.DataFrame(resultados)
+
+    # Formatear columnas numéricas
+    resultados_df["KS Statistic"] = resultados_df["KS Statistic"].map(lambda x: f"{x:.4f}" if pd.notnull(x) else "")
+    resultados_df["p-valor"] = resultados_df["p-valor"].map(lambda x: f"{x:.4e}" if pd.notnull(x) else "")
+
+    # Mostrar resultados en Streamlit
+    st.dataframe(
+        resultados_df,
+        use_container_width=True,
+        hide_index=True
+    )
+    
+    st.markdown("""
+                    
+                    """) 
+    
+    st.markdown("""
+                    <div>
+                    <p style='color:#444444; text-align:justify; font-size:20px; margin:0 0 12px 0;'> 
+                    En todas las variables analizadas (Nota 1, Nota 2, Nota 3, Nota 4, Nota Definitiva, Nota de Habilitación y Nota Final), el p-valor obtenido en la prueba de Kolmogorov-Smirnov fue 0.0000e+00, valor inferior al nivel de significancia de α = 0.05. En consecuencia, se rechaza la hipótesis nula de normalidad en todas las distribuciones.
+                    <br><br>
+                    El estadístico KS evidenció diferencias en la magnitud de la desviación respecto a la normalidad. Los valores más bajos se observan en Nota Definitiva (KS = 0.1178) y Nota Final (KS = 0.1166), mientras que los más altos corresponden a Nota 4 (KS = 0.5280) y Nota de Habilitación (KS = 0.5356). Esto indica que, aunque todas las variables presentan una distribución no normal, el grado de desviación es mayor en algunas de ellas.
+                    <br><br>
+                    En síntesis, los resultados confirman que ninguna de las variables evaluadas cumple con el supuesto de normalidad, lo que implica la necesidad de emplear técnicas estadísticas no paramétricas o transformaciones adecuadas en el análisis posterior.                    
+                    </P>
+                    </div>
+                    """, unsafe_allow_html=True)   
+    
+    st.markdown("""
+                    
+                    """) 
+    # ==============================================
+    # Gráficos de Distribución por Variable
+    # ==============================================
+
+    st.subheader("📊 Distribuciones y Curvas Normales de las Notas")
+
+    variables = ["Nota 1", "Nota 2", "Nota 3",
+                "Nota 4", "Nota Definitiva",
+                "Nota Habilitación", "Nota Final"]
+
+    # Crear figura y ejes (3x3)
+    fig, axes = plt.subplots(3, 3, figsize=(15, 12))
+    axes = axes.flatten()
+
+    for i, var in enumerate(variables):
+        datos = df[var].dropna()
+        if len(datos) == 0:
+            continue
+
+        # Calcular media y desviación estándar
+        mu, sigma = datos.mean(), datos.std(ddof=0)
+
+        # Histograma de los datos
+        axes[i].hist(datos, bins=15, density=True, alpha=0.6,
+                    color='skyblue', edgecolor='black', label='Datos')
+
+        # Curva normal teórica
+        x = np.linspace(min(datos), max(datos), 100)
+        y = norm.pdf(x, mu, sigma)
+        axes[i].plot(x, y, 'r-', lw=2, label=f'N({mu:.2f}, {sigma:.2f}²)')
+
+        # Estilo del subplot
+        axes[i].set_title(f"Distribución de {var}")
+        axes[i].set_xlabel(var)
+        axes[i].set_ylabel("Densidad")
+        axes[i].grid(True, linestyle="--", alpha=0.6)
+        axes[i].legend()
+
+    # Eliminar subplots vacíos
+    for j in range(len(variables), len(axes)):
+        fig.delaxes(axes[j])
+
+    plt.tight_layout()
+
+    # Mostrar gráfico en Streamlit
+    st.pyplot(fig)
+    
+    
+#------------------------------------------------------------------------------------------------------------------------------------------------------------------------    
+
+#------------------------------------------------------------------------------------------------------------------------------------------------------------------------
+    st.markdown("""
+                <div
+                    <h2 style='color:#111111; font-weight:600; font-size:30px; margin:18px 0 6px 0;'>3.8.PRUEBA NO PARAMÉTRICA: CORRELACIÓN DE SPEARMAN</h2>
+                    <br>
+                </div>
+                """, unsafe_allow_html=True)     
+ 
+    st.markdown("""
+                    <div>
+                    <p style='color:#444444; text-align:justify; font-size:20px; margin:0 0 12px 0;'> 
+                    La siguiente tabla, muestra la relación entre las notas parciales y la Nota Final mediante el coeficiente de correlación de Spearman. Los resultados dan cuenta de un comportamientos heterogéneos en cuanto a la magnitud y dirección de las asociaciones.
+                    </P>
+                    </div>
+                    """, unsafe_allow_html=True)   
+    
+    st.markdown("""
+                    
+                    """) 
+
+    # -------------------------------------------------
+    # Tabla de Correlación de Spearman
+    # -------------------------------------------------
+    variables = ["Nota 1", "Nota 2", "Nota 3", "Nota 4",
+                "Nota Definitiva", "Nota Habilitación"]
+    target = "Nota Final"
+
+    # Verificar columnas presentes (evita errores si falta alguna)
+    cols_presentes = [c for c in variables + [target] if c in df.columns]
+    if target not in cols_presentes:
+        st.error(f"No se encontró la columna objetivo: '{target}' en el DataFrame.")
+    else:
+        vars_presentes = [c for c in variables if c in cols_presentes]
+
+        # Calcular correlaciones Spearman
+        spearman_corr = (
+            df[vars_presentes + [target]]
+            .corr(method="spearman")[target]
+            .drop(target)
+            .sort_values(ascending=False, key=lambda s: s.abs())  # ordenar por |corr|
+            .round(3)
+        )
+
+        corr_df = pd.DataFrame({"Correlación Spearman": spearman_corr})
+
+        # Mostrar tabla en Streamlit
+        st.dataframe(
+                corr_df,
+                use_container_width=False,
+                hide_index=False
+            )
+
+    st.markdown("""
+                    
+                    """) 
+    
+    st.markdown("""
+                    <div>
+                    <p style='color:#444444; text-align:justify; font-size:20px; margin:0 0 12px 0;'> 
+                    La Nota 1 presenta un coeficiente de correlación de Spearman de 0.204, mientras que la Nota 2 registra un valor de 0.219. Ambos resultados indican asociaciones positivas de baja magnitud con la Nota Final.
+                    La Nota 3 alcanza un coeficiente de Spearman de 0.701, valor que representa la asociación positiva más alta entre las notas parciales y la Nota Final.
+                    Por otro lado, la Nota 4 muestra un valor de 0.001, prácticamente nulo, lo que evidencia ausencia de relación monótona con la Nota Final.
+                    La Nota Definitiva registra un coeficiente de Spearman de 0.991, siendo el valor más alto en la tabla y reflejando una asociación positiva casi perfecta con la Nota Final.
+                    Finalmente, la Nota de Habilitación presenta un coeficiente negativo de -0.137, indicando una asociación inversa de baja magnitud con la Nota Final.
+                    </P>
+                    </div>
+                    """, unsafe_allow_html=True)   
+    
+    st.markdown("""
+                    
+                    """)             
+
+    # -------------------------------------------------
+    # Matriz de Correlación de Spearman
+    # -------------------------------------------------
+    
+    st.subheader("🔥 Matriz de correlaciones")
+
+    # ---------------------------
+    # Controles
+    # ---------------------------
+    # Sugerencia inicial (si existen esas columnas); si no, toma numéricas
+    sugeridas = [c for c in ["Nota 1", "Nota 2", "Nota 3", "Nota 4",
+                            "Nota Definitiva", "Nota Habilitación", "Nota Final"]
+                if c in df.columns]
+
+    numericas = df.select_dtypes(include=[np.number]).columns.tolist()
+    opciones_cols = sugeridas if len(sugeridas) >= 2 else numericas
+
+    cols = st.multiselect(
+        "Selecciona las variables a correlacionar",
+        options=opciones_cols if opciones_cols else df.columns.tolist(),
+        default=opciones_cols[:min(6, len(opciones_cols))] if opciones_cols else []
+    )
+
+      
+    solo_triangulo_superior = st.checkbox("Mostrar solo triángulo superior", value=False)
+    usar_absoluto_para_orden = st.checkbox("Ordenar variables por |correlación| con la primera seleccionada", value=False)
+    aplicar_clustering = st.checkbox("Aplicar ordenamiento por clustering jerárquico", value=False)
+
+    if len(cols) < 2:
+        st.info("Selecciona al menos dos columnas para calcular la matriz de correlaciones.")
+        st.stop()
+
+    # ---------------------------
+    # Cálculo de la matriz
+    # ---------------------------
+    X = df[cols].copy()
+
+    # Eliminar columnas constantes (corr = NaN)
+    constantes = [c for c in X.columns if X[c].nunique(dropna=True) <= 1]
+    if constantes:
+        st.warning(f"Columnas con varianza cero (excluidas): {', '.join(constantes)}")
+        X = X.drop(columns=constantes)
+
+    if X.shape[1] < 2:
+        st.error("No hay suficientes columnas con variación para calcular correlaciones.")
+        st.stop()
+
+    corr = X.corr(method="spearman")
+
+    # ---------------------------
+    # Ordenamiento opcional
+    # ---------------------------
+    orden = list(corr.columns)
+
+    # a) Orden por |corr| respecto a la primera seleccionada
+    if usar_absoluto_para_orden and len(orden) > 1:
+        ref = orden[0]
+        orden = [ref] + [c for c in sorted(orden[1:], key=lambda c: -abs(corr.loc[ref, c]))]
+        corr = corr.loc[orden, orden]
+
+    # b) Clustering jerárquico
+    if aplicar_clustering and corr.shape[0] >= 2:
+        # Distancia = 1 - |corr| para agrupar similar por magnitud
+        from scipy.cluster.hierarchy import linkage, leaves_list
+        from scipy.spatial.distance import squareform
+
+        corr_filled = corr.fillna(0)
+        dist = 1 - np.abs(corr_filled)
+        # squareform requiere matriz simétrica sin diagonal en vector condensado
+        dist_vec = squareform(dist.values, checks=False)
+        Z = linkage(dist_vec, method="average")
+        orden_idx = leaves_list(Z)
+        orden = corr.index[orden_idx].tolist()
+        corr = corr.loc[orden, orden]
+
+    # ---------------------------
+    # Máscara de triángulo superior
+    # ---------------------------
+    plot_corr = corr.copy().round(2)
+    if solo_triangulo_superior:
+        mask = np.tril(np.ones_like(plot_corr, dtype=bool), k=-1)
+        plot_corr = plot_corr.mask(mask)
+
+    # ---------------------------
+    # Heatmap interactivo Plotly
+    # ---------------------------
+    fig = px.imshow(
+        plot_corr,
+        text_auto=True,
+        zmin=-1, zmax=1,
+        color_continuous_scale="RdBu_r",
+        aspect="auto",
+    )
+
+    fig.update_layout(
+        title=f"Matriz de correlaciones de Spearman ({len(plot_corr)} variables)",
+        margin=dict(l=40, r=20, t=60, b=40),
+        coloraxis_colorbar=dict(title="r")
+    )
+    fig.update_traces(hovertemplate="Fila: %{y}<br>Columna: %{x}<br>r = %{z}<extra></extra>")
+
+    st.plotly_chart(fig, use_container_width=True)
+    
+#------------------------------------------------------------------------------------------------------------------------------------------------------------------------    
+
+#------------------------------------------------------------------------------------------------------------------------------------------------------------------------
+    st.markdown("""
+                <div
+                    <h2 style='color:#111111; font-weight:600; font-size:30px; margin:18px 0 6px 0;'>3.9.PRUEBA DE INDEPENDENCIA: PRUEBA CHI-CUADRADO</h2>
+                    <br>
+                </div>
+                """, unsafe_allow_html=True)     
+ 
+    st.markdown("""
+                    <div>
+                    <p style='color:#444444; text-align:justify; font-size:20px; margin:0 0 12px 0;'> 
+                    El análisis estadístico realizado mediante la prueba Chi-cuadrado de independencia permite establecer si existe una relación significativa entre el Rendimiento (académico) de los estudiantes y las variables Programa (académico) y Asignatura. Los resultados muestran que, en todos los casos evaluados, el valor p fue prácticamente cero, lo que indica una fuerte evidencia para rechazar la hipótesis nula de independencia. En otras palabras, se confirma que sí existe asociación entre las variables analizadas y el Rendimiento (académico).
+                    </P>
+                    </div>
+                    """, unsafe_allow_html=True)   
+    
+    st.markdown("""
+                    
+                    """) 
    
+
+    # ---------------------------------------------------
+    # Función para prueba Chi²
+    # ---------------------------------------------------
+    def prueba_chi2(df, var_filas, var_columnas, nombre):
+        tabla = pd.crosstab(df[var_filas], df[var_columnas])
+        chi2, p, dof, ex = chi2_contingency(tabla)
+        interpretacion = "✅ Sí existe asociación" if p < 0.05 else "❌ No existe asociación"
+        return {
+            "Comparación": f"{nombre} ~ {var_columnas}",
+            "Estadístico Chi²": chi2,
+            "Grados de libertad": dof,
+            "Valor p": p,
+            "Interpretación": interpretacion
+        }
+
+    # ---------------------------------------------------
+    # Ejecutar pruebas solo para las combinaciones deseadas
+    # ---------------------------------------------------
+    resultados = []
+
+    if {"Programa", "Rendimiento"}.issubset(df.columns):
+        resultados.append(prueba_chi2(df, "Programa", "Rendimiento", "Programa"))
+    else:
+        st.warning("⚠️ No se encontraron las columnas 'Programa' y 'Rendimiento' en el DataFrame.")
+
+    if {"Asignatura", "Rendimiento"}.issubset(df.columns):
+        resultados.append(prueba_chi2(df, "Asignatura", "Rendimiento", "Asignatura"))
+    else:
+        st.warning("⚠️ No se encontraron las columnas 'Asignatura' y 'Rendimiento' en el DataFrame.")
+
+    # ---------------------------------------------------
+    # Mostrar resultados si existen
+    # ---------------------------------------------------
+    if resultados:
+        resultados_df = pd.DataFrame(resultados)
+        resultados_df["Estadístico Chi²"] = resultados_df["Estadístico Chi²"].map("{:,.2f}".format)
+        resultados_df["Valor p"] = resultados_df["Valor p"].map("{:.4e}".format)
+
+        st.dataframe(
+            resultados_df,
+            use_container_width=True,
+            hide_index=True
+        )
+    else:
+        st.info("No se pudieron generar resultados de Chi² con las columnas disponibles.")
+
+    st.markdown("""
+                    
+                    """) 
+    
+    st.markdown("""
+                    <div>
+                    <p style='color:#444444; text-align:justify; font-size:20px; margin:0 0 12px 0;'> 
+                    En primer lugar, se encontró que el Rendimiento (académico) depende del Programa (académico) en el que se encuentra matriculado el estudiante. Esto significa que la distribución de los niveles de Rendimiento (Deficiente, Bajo, Medio, Alto y Superior) no es homogénea entre los diferentes programas, sino que algunos de ellos tienden a concentrar mayor o menor proporción de estudiantes con Rendimientos destacados y, en segundo lugar, al analizar la relación entre las Asignaturas y el Rendimiento (académico), se observó una asociación aún más fuerte. Esto refleja que el tipo de Asignatura influye significativamente en el desempeño de los estudiantes.
+                    </P>
+                    </div>
+                    """, unsafe_allow_html=True)   
+    
+    st.markdown("""
+                    
+                    """)  
+#------------------------------------------------------------------------------------------------------------------------------------------------------------------------    
+
 def page_model():
     st.markdown("""
                 <div style='padding:8px 0; margin-bottom:8px;'>
@@ -1170,7 +1673,6 @@ ROUTES = {
 }
 
 ROUTES[choice]()
-
 
 
 
