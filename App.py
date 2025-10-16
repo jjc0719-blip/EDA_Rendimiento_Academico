@@ -18,7 +18,7 @@ import glob
 import hashlib
 from pathlib import Path
 import requests 
-from scipy.stats import kstest, spearmanr, chi2_contingency, norm   
+from scipy.stats import kstest, pearsonr, chi2_contingency, norm   
 
 
 
@@ -154,7 +154,7 @@ def page_eda():
                 </div>
                 """, unsafe_allow_html=True)
     
-    # ---------- Utils ----------
+    # ---------- Cargue cache y Parquet ----------
 
     @st.cache_data(ttl=60*60, show_spinner=False)
     def load_parquet(path_str: str) -> pd.DataFrame:
@@ -240,7 +240,7 @@ def page_eda():
             st.stop()
 
 #------------------------------------------------------------------------------------------------------------------------------------------------------------------------
- # iNICIA EDA
+ # INICIA EDA
 #------------------------------------------------------------------------------------------------------------------------------------------------------------------------
 
 
@@ -399,7 +399,7 @@ def page_eda():
     st.markdown("""
                     <div>
                         <p style='color:#444444; text-align:justify; font-size:20px; margin:0 0 12px 0;'> 
-                        Dentro de la <strong>clase Información Académica</strong> se agrupan las variables que describen el contexto académico de cada estudiante. Estas incluyen: Facultad, Programa Académico, Código de Asignatura, Asignatura/Materia, Grupo y Código Estudiantil. Las cinco primeras corresponden a <strong>variables categóricas nominales</strong>, mientras que el Código Estudiantil se clasifica como <strong>variable numérica continua</strong>.
+                        Dentro de la <strong>clase Información Académica</strong> se agrupan las variables que describen el contexto académico de cada estudiante. Estas incluyen: Facultad, Programa Académico, Código de Asignatura, Asignatura/Materia, Grupo y Código Estudiantil. Las cinco primeras corresponden a <strong>variables categóricas nominales</strong>, mientras que el Código Estudiantil se clasifica como <strong>variable discreta</strong>.
                         <br>
                         La <strong>clase Registro de Notas</strong> reúne las variables asociadas al desempeño académico, entre ellas las <strong>notas parciales</strong> (Nota 1, Nota 2, Nota 3 y Nota 4), la Nota Definitiva, la Nota de Habilitación y la Nota Final. Todas estas variables son de tipo <strong>numérico continuo</strong>.
                         <br>
@@ -647,7 +647,7 @@ def page_eda():
 #------------------------------------------------------------------------------------------------------------------------------------------------------------------------
     st.markdown("""
                 <div
-                    <h2 style='color:#111111; font-weight:600; font-size:30px; margin:18px 0 6px 0;'>3.4. COMPORTAMIENTO DEL RENDIMIENTO ACADÉMICO ESTUDIANTILA</h2>
+                    <h2 style='color:#111111; font-weight:600; font-size:30px; margin:18px 0 6px 0;'>3.4. COMPORTAMIENTO DEL RENDIMIENTO ACADÉMICO ESTUDIANTIL</h2>
                     <br>
                 </div>
                 """, unsafe_allow_html=True)     
@@ -772,26 +772,26 @@ def page_eda():
                 st.plotly_chart(fig, use_container_width=True)
 
             # Tabla resumen debajo del gráfico
-            summary = plot_df[['label', 'count', 'perc']].copy()
-            summary = summary.rename(columns={'label': 'Categoría', 'count': 'Frecuencia', 'perc': 'Porcentaje (%)'})
+            #summary = plot_df[['label', 'count', 'perc']].copy()
+            #summary = summary.rename(columns={'label': 'Categoría', 'count': 'Frecuencia', 'perc': 'Porcentaje (%)'})
 
             # Formatear columnas para presentación
-            summary['Frecuencia'] = summary['Frecuencia'].map(lambda x: f"{int(x):,}")
-            summary['Porcentaje (%)'] = summary['Porcentaje (%)'].map(lambda x: f"{float(x):.2f}")
+            #summary['Frecuencia'] = summary['Frecuencia'].map(lambda x: f"{int(x):,}")
+            #summary['Porcentaje (%)'] = summary['Porcentaje (%)'].map(lambda x: f"{float(x):.2f}")
 
             # Mostrar encabezado y la tabla estilizada
             #st.markdown("### Distribución del Rendimiento Académico")
             # usar st.dataframe para mantener el ancho y permitir copiar/paginado
-            styled_summary = (
-                summary.style
-                .set_table_styles([
-                    {"selector": "thead th", "props": [("background-color", "#111111"), ("color", "#ffffff"), ("font-weight", "600")]},
-                    {"selector": "tbody td", "props": [("font-size", "13px"), ("text-align", "center")]}
-                ])
-                .hide(axis="index")
-            )
+            #styled_summary = (
+            #    summary.style
+            #    .set_table_styles([
+            #        {"selector": "thead th", "props": [("background-color", "#111111"), ("color", "#ffffff"), ("font-weight", "600")]},
+            #        {"selector": "tbody td", "props": [("font-size", "13px"), ("text-align", "center")]}
+            #    ])
+            #    .hide(axis="index")
+            #)
 
-            st.dataframe(styled_summary, use_container_width=True)
+            #st.dataframe(styled_summary, use_container_width=True)
    
     st.markdown("""
                     
@@ -1012,24 +1012,24 @@ def page_eda():
     # Prefijo para claves (evita IDs duplicados si lo usas en varias páginas)
     PREFIX = "eda_tabla_rend_prog"
 
-    modo = st.radio(
-        "Modo de visualización",
-        ["Interactiva (st.dataframe)", "HTML estilizado (to_html)"],
-        index=0,
-        key=f"{PREFIX}_modo"
-    )
+    #modo = st.radio(
+    #    "Modo de visualización",
+    #    ["Interactiva (st.dataframe)", "HTML estilizado (to_html)"],
+    #    index=0,
+    #    key=f"{PREFIX}_modo"
+    #)
 
-    if modo.startswith("Interactiva"):
+    #if modo.startswith("Interactiva"):
         # st.dataframe no muestra bien los MultiIndex de columnas; los aplanamos para legibilidad
-        df_flat = tabla_final.copy()
-        df_flat.columns = [
+    df_flat = tabla_final.copy()
+    df_flat.columns = [
         ("{} - {}".format(a.strip(), b.strip()) if a and b else (a or b)).strip()
         for a, b in df_flat.columns.to_list()
     ]
-        st.dataframe(df_flat, use_container_width=True, key=f"{PREFIX}_df")
-    else:
+    st.dataframe(df_flat, use_container_width=True, key=f"{PREFIX}_df")
+    #else:
         # Render HTML del Styler (mejor respeta el CSS del Styler)
-        st.markdown(styled.to_html(), unsafe_allow_html=True)
+    #    st.markdown(styled.to_html(), unsafe_allow_html=True)
 #------------------------------------------------------------------------------------------------------------------------------------------------------------------------    
 
 #------------------------------------------------------------------------------------------------------------------------------------------------------------------------
@@ -1220,17 +1220,17 @@ def page_eda():
         st.stop()
 
     # selección para vista
-    ver_interactiva = st.radio(
-        "Modo de visualización",
-        ["Interactiva (st.dataframe)", "HTML estilizado (to_html)"],
-        index=0
-    )
+    #ver_interactiva = st.radio(
+    #    "Modo de visualización",
+    #    ["Interactiva (st.dataframe)", "HTML estilizado (to_html)"],
+    #    index=0
+    #)
     
     # Mostrar
-    if ver_interactiva.startswith("Interactiva"):
-        st.dataframe(tabla_fmt, use_container_width=True, height=500)
-    else:
-        st.markdown(styled.to_html(), unsafe_allow_html=True)
+    #if ver_interactiva.startswith("Interactiva"):
+    st.dataframe(tabla_fmt, use_container_width=True, height=500)
+    #else:
+    #    st.markdown(styled.to_html(), unsafe_allow_html=True)
 
 #------------------------------------------------------------------------------------------------------------------------------------------------------------------------    
 
@@ -1331,48 +1331,48 @@ def page_eda():
     # Gráficos de Distribución por Variable
     # ==============================================
 
-    st.subheader("📊 Distribuciones y Curvas Normales de las Notas")
+    #st.subheader("📊 Distribuciones y Curvas Normales de las Notas")
 
-    variables = ["Nota 1", "Nota 2", "Nota 3",
-                "Nota 4", "Nota Definitiva",
-                "Nota Habilitación", "Nota Final"]
+    #variables = ["Nota 1", "Nota 2", "Nota 3",
+    #            "Nota 4", "Nota Definitiva",
+    #            "Nota Habilitación", "Nota Final"]
 
     # Crear figura y ejes (3x3)
-    fig, axes = plt.subplots(3, 3, figsize=(15, 12))
-    axes = axes.flatten()
+    #fig, axes = plt.subplots(3, 3, figsize=(15, 12))
+    #axes = axes.flatten()
 
-    for i, var in enumerate(variables):
-        datos = df[var].dropna()
-        if len(datos) == 0:
-            continue
+    #for i, var in enumerate(variables):
+    #    datos = df[var].dropna()
+    #    if len(datos) == 0:
+    #        continue
 
         # Calcular media y desviación estándar
-        mu, sigma = datos.mean(), datos.std(ddof=0)
+    #   mu, sigma = datos.mean(), datos.std(ddof=0)
 
         # Histograma de los datos
-        axes[i].hist(datos, bins=15, density=True, alpha=0.6,
-                    color='skyblue', edgecolor='black', label='Datos')
+    #    axes[i].hist(datos, bins=15, density=True, alpha=0.6,
+    #                color='skyblue', edgecolor='black', label='Datos')
 
         # Curva normal teórica
-        x = np.linspace(min(datos), max(datos), 100)
-        y = norm.pdf(x, mu, sigma)
-        axes[i].plot(x, y, 'r-', lw=2, label=f'N({mu:.2f}, {sigma:.2f}²)')
+    #    x = np.linspace(min(datos), max(datos), 100)
+    #    y = norm.pdf(x, mu, sigma)
+    #    axes[i].plot(x, y, 'r-', lw=2, label=f'N({mu:.2f}, {sigma:.2f}²)')
 
         # Estilo del subplot
-        axes[i].set_title(f"Distribución de {var}")
-        axes[i].set_xlabel(var)
-        axes[i].set_ylabel("Densidad")
-        axes[i].grid(True, linestyle="--", alpha=0.6)
-        axes[i].legend()
+    #    axes[i].set_title(f"Distribución de {var}")
+    #    axes[i].set_xlabel(var)
+    #    axes[i].set_ylabel("Densidad")
+    #    axes[i].grid(True, linestyle="--", alpha=0.6)
+    #    axes[i].legend()
 
     # Eliminar subplots vacíos
-    for j in range(len(variables), len(axes)):
-        fig.delaxes(axes[j])
+    #for j in range(len(variables), len(axes)):
+    #    fig.delaxes(axes[j])
 
-    plt.tight_layout()
+    #plt.tight_layout()
 
     # Mostrar gráfico en Streamlit
-    st.pyplot(fig)
+    #st.pyplot(fig)
     
     
 #------------------------------------------------------------------------------------------------------------------------------------------------------------------------    
@@ -1380,7 +1380,7 @@ def page_eda():
 #------------------------------------------------------------------------------------------------------------------------------------------------------------------------
     st.markdown("""
                 <div
-                    <h2 style='color:#111111; font-weight:600; font-size:30px; margin:18px 0 6px 0;'>3.8.PRUEBA NO PARAMÉTRICA: CORRELACIÓN DE SPEARMAN</h2>
+                    <h2 style='color:#111111; font-weight:600; font-size:30px; margin:18px 0 6px 0;'>3.8.PRUEBA NO PARAMÉTRICA: CORRELACIÓN DE PEARSON</h2>
                     <br>
                 </div>
                 """, unsafe_allow_html=True)     
@@ -1388,7 +1388,7 @@ def page_eda():
     st.markdown("""
                     <div>
                     <p style='color:#444444; text-align:justify; font-size:20px; margin:0 0 12px 0;'> 
-                    La siguiente tabla, muestra la relación entre las notas parciales y la Nota Final mediante el coeficiente de correlación de Spearman. Los resultados dan cuenta de un comportamientos heterogéneos en cuanto a la magnitud y dirección de las asociaciones.
+                    La siguiente tabla, muestra la relación entre las notas parciales y la Nota Final mediante el coeficiente de correlación de Pearson. Los resultados dan cuenta de un comportamientos heterogéneos en cuanto a la magnitud y dirección de las asociaciones.
                     </P>
                     </div>
                     """, unsafe_allow_html=True)   
@@ -1398,7 +1398,7 @@ def page_eda():
                     """) 
 
     # -------------------------------------------------
-    # Tabla de Correlación de Spearman
+    # Tabla de Correlación de Pearson
     # -------------------------------------------------
     variables = ["Nota 1", "Nota 2", "Nota 3", "Nota 4",
                 "Nota Definitiva", "Nota Habilitación"]
@@ -1411,16 +1411,16 @@ def page_eda():
     else:
         vars_presentes = [c for c in variables if c in cols_presentes]
 
-        # Calcular correlaciones Spearman
-        spearman_corr = (
+        # Calcular correlaciones Pearson
+        Pearson_corr = (
             df[vars_presentes + [target]]
-            .corr(method="spearman")[target]
+            .corr(method="pearson")[target]
             .drop(target)
             .sort_values(ascending=False, key=lambda s: s.abs())  # ordenar por |corr|
             .round(3)
         )
 
-        corr_df = pd.DataFrame({"Correlación Spearman": spearman_corr})
+        corr_df = pd.DataFrame({"Correlación Pearson": Pearson_corr})
 
         # Mostrar tabla en Streamlit
         st.dataframe(
@@ -1436,11 +1436,11 @@ def page_eda():
     st.markdown("""
                     <div>
                     <p style='color:#444444; text-align:justify; font-size:20px; margin:0 0 12px 0;'> 
-                    La Nota 1 presenta un coeficiente de correlación de Spearman de 0.204, mientras que la Nota 2 registra un valor de 0.219. Ambos resultados indican asociaciones positivas de baja magnitud con la Nota Final.
-                    La Nota 3 alcanza un coeficiente de Spearman de 0.701, valor que representa la asociación positiva más alta entre las notas parciales y la Nota Final.
-                    Por otro lado, la Nota 4 muestra un valor de 0.001, prácticamente nulo, lo que evidencia ausencia de relación monótona con la Nota Final.
-                    La Nota Definitiva registra un coeficiente de Spearman de 0.991, siendo el valor más alto en la tabla y reflejando una asociación positiva casi perfecta con la Nota Final.
-                    Finalmente, la Nota de Habilitación presenta un coeficiente negativo de -0.137, indicando una asociación inversa de baja magnitud con la Nota Final.
+                    La Nota 1 presenta un coeficiente de correlación de Pearson de 0.1460, mientras que la Nota 2 registra un valor de 0.1760, ambos resultados indican asociaciones positivas de baja magnitud con la Nota Final.
+                    La Nota 3 alcanza un coeficiente de Pearson de 0.5630, valor que representa la asociación positiva más alta entre las notas parciales y la Nota Final.
+                    Por otro lado, la Nota 4 muestra un valor de 0.019, prácticamente nulo, lo que evidencia ausencia de relación monótona con la Nota Final.
+                    La Nota Definitiva registra un coeficiente de Pearson de 0.9890, siendo el valor más alto en la tabla y reflejando una asociación positiva casi perfecta con la Nota Final.
+                    Finalmente, la Nota de Habilitación presenta un coeficiente negativo de -0.078, indicando una asociación inversa de baja magnitud con la Nota Final.
                     </P>
                     </div>
                     """, unsafe_allow_html=True)   
@@ -1450,7 +1450,7 @@ def page_eda():
                     """)             
 
     # -------------------------------------------------
-    # Matriz de Correlación de Spearman
+    # Matriz de Correlación de Person
     # -------------------------------------------------
     
     st.subheader("🔥 Matriz de correlaciones")
@@ -1475,7 +1475,7 @@ def page_eda():
       
     solo_triangulo_superior = st.checkbox("Mostrar solo triángulo superior", value=False)
     usar_absoluto_para_orden = st.checkbox("Ordenar variables por |correlación| con la primera seleccionada", value=False)
-    aplicar_clustering = st.checkbox("Aplicar ordenamiento por clustering jerárquico", value=False)
+    #aplicar_clustering = st.checkbox("Aplicar ordenamiento por clustering jerárquico", value=False)
 
     if len(cols) < 2:
         st.info("Selecciona al menos dos columnas para calcular la matriz de correlaciones.")
@@ -1496,7 +1496,7 @@ def page_eda():
         st.error("No hay suficientes columnas con variación para calcular correlaciones.")
         st.stop()
 
-    corr = X.corr(method="spearman")
+    corr = X.corr(method="pearson")
 
     # ---------------------------
     # Ordenamiento opcional
@@ -1510,19 +1510,19 @@ def page_eda():
         corr = corr.loc[orden, orden]
 
     # b) Clustering jerárquico
-    if aplicar_clustering and corr.shape[0] >= 2:
+    #if aplicar_clustering and corr.shape[0] >= 2:
         # Distancia = 1 - |corr| para agrupar similar por magnitud
-        from scipy.cluster.hierarchy import linkage, leaves_list
-        from scipy.spatial.distance import squareform
+    #    from scipy.cluster.hierarchy import linkage, leaves_list
+    #    from scipy.spatial.distance import squareform
 
-        corr_filled = corr.fillna(0)
-        dist = 1 - np.abs(corr_filled)
-        # squareform requiere matriz simétrica sin diagonal en vector condensado
-        dist_vec = squareform(dist.values, checks=False)
-        Z = linkage(dist_vec, method="average")
-        orden_idx = leaves_list(Z)
-        orden = corr.index[orden_idx].tolist()
-        corr = corr.loc[orden, orden]
+    #    corr_filled = corr.fillna(0)
+    #    dist = 1 - np.abs(corr_filled)
+    #    # squareform requiere matriz simétrica sin diagonal en vector condensado
+    #    dist_vec = squareform(dist.values, checks=False)
+    #    Z = linkage(dist_vec, method="average")
+    #    orden_idx = leaves_list(Z)
+    #    orden = corr.index[orden_idx].tolist()
+    #    corr = corr.loc[orden, orden]
 
     # ---------------------------
     # Máscara de triángulo superior
@@ -1544,7 +1544,7 @@ def page_eda():
     )
 
     fig.update_layout(
-        title=f"Matriz de correlaciones de Spearman ({len(plot_corr)} variables)",
+        title=f"Matriz de correlaciones de Pearson ({len(plot_corr)} variables)",
         margin=dict(l=40, r=20, t=60, b=40),
         coloraxis_colorbar=dict(title="r")
     )
@@ -1636,6 +1636,7 @@ def page_eda():
     st.markdown("""
                     
                     """)  
+    
 #------------------------------------------------------------------------------------------------------------------------------------------------------------------------    
 
 def page_model():
