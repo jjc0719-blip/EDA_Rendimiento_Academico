@@ -20,6 +20,7 @@ from pathlib import Path
 import requests 
 from scipy.stats import kstest, pearsonr, chi2_contingency, norm   
 import pickle
+import traceback    
 
 
 
@@ -71,7 +72,7 @@ def page_intro():
     # Título Introducción 
     st.markdown("""
                     <div style='position:fixed; top:40px; left:400px; right:24px; background:#ffffff; padding:10px 16px; z-index:9999; border-bottom:1px solid rgba(0,0,0,0.06);'>
-                    <h1 style='color:#111111; font-weight:700; font-size:50px; margin:0;'>INTRODUCCIÓN</h1>
+                    <h1 style='color:#111111; font-weight:700; font-size:50px; margin:0;'> INTRODUCCIÓN</h1>
                 </div>
                     <div style='height:64px;'></div>
                 """, unsafe_allow_html=True)
@@ -144,7 +145,7 @@ def page_objectives():
 def page_eda():
     st.markdown("""
                 <div style='position:fixed; top:40px; left:400px; right:24px; background:#ffffff; padding:10px 16px; z-index:9999; border-bottom:1px solid rgba(0,0,0,0.06);'>
-                    <h1 style='color:#111111; font-weight:700; font-size:32px; margin:0;'>EXPLORACIÓN DE LOS DATOS (EDA)</h1>
+                    <h1 style='color:#111111; font-weight:700; font-size:50px; margin:0;'>EXPLORACIÓN DE LOS DATOS (EDA)</h1>
                 </div>
                 """, unsafe_allow_html=True)
     st.markdown("""
@@ -1649,7 +1650,7 @@ def page_model():
     # Título 
     st.markdown("""
                     <div style='position:fixed; top:40px; left:400px; right:24px; background:#ffffff; padding:10px 16px; z-index:9999; border-bottom:1px solid rgba(0,0,0,0.06);'>
-                    <h1 style='color:#111111; font-weight:700; font-size:50px; margin:0;'>MODELO ESTADÍSTICO </h1>
+                    <h1 style='color:#111111; font-weight:700; font-size:45px; margin:0;'>MODELO ESTADÍSTICO PREDICCIÓN DEL RENDIMIENTO 🎓 </h1>
                 </div>
                     <div style='height:64px;'></div>
                 """, unsafe_allow_html=True)
@@ -1664,35 +1665,34 @@ def page_model():
                 </div>
                 """, unsafe_allow_html=True)
 
-    #st.title("🩺 Predicción de Cáncer de Mama cargando un modelo Pickle")
-
-    # =====================
-    # Carga del pickle
-    # =====================
-
     
-    #with open("modelo_cancer.pkl", "rb") as archivos:
-    #    data = pickle.load(archivos)
+    # -----------------------------
+    # Carga de modelo y metadatos
+    # -----------------------------
+    @st.cache_resource
+    def cargar_modelo(ruta="Modelo_xgb.pkl"):
+        with open(ruta, "rb") as f:
+            data = pickle.load(f)
 
-    #modelo = data["modelo"]
-    #features = data["features"]
+        meta = {"features": [], "categorias": {}, "label_classes": None}
+        if isinstance(data, dict):
+            modelo = data.get("modelo", data)
+            meta["features"] = data.get("features", [])
+            meta["categorias"] = data.get("categorias", {})
+            meta["label_classes"] = data.get("label_classes", None)
+        else:
+            modelo = data
+        return modelo, meta
 
-    #st.write("Introduce los valores de las características:")
+    modelo, meta = cargar_modelo()
+    st.success("✅ Modelo cargado")
 
-
-    # =====================
-    # Crear inputs con valores por defecto en la media
-    # =====================
-
-    #medias = datos.drop(columns=["id", "diagnosis"]).mean()
-
-    #entrada_usuario = {}
-    #for col in features:
-    #    entrada_usuario[col] = st.number_input(
-    #        f"{col}",
-    #        value=float(medias[col]),   # valor medio por defecto
-    #        format="%.4f"
-    #)
+    st.title("🎯 Predicción de Rendimiento")
+    st.write("**Tipo de modelo:**", type(modelo))
+    st.write("**Features (columnas usadas):**", meta.get("features", []))
+    st.write("**Variables categóricas:**", meta.get("categorias", {}))
+    st.write("**Clases de etiqueta:**", meta.get("label_classes", None))
+    
 
 
 def page_conclusions():
