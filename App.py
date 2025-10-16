@@ -110,7 +110,7 @@ def page_objectives():
                 <div style='padding:8px 0; margin-bottom:8px;'>
                     <h1 style='color:#333333; font-size:24px; font-family: Tahoma, "Tahoma", Geneva, sans-serif; text-align:justify; text-justify:inter-word; line-height:1.6; margin:0;'> GENERAL </h1>
                     <p style='color:#333333; font-size:18px; font-family: Tahoma, "Tahoma", Geneva, sans-serif; text-align:justify; text-justify:inter-word; line-height:1.6; margin:0;'>
-                     Analizar, modelar y predecir el rendimiento académico de los estudiantes a partir de variables socioacadémicas y de desempeño, mediante técnicas estadísticas descriptivas, inferenciales y de aprendizaje automático basadas en el algoritmo XGBoost, con el propósito de identificar patrones, relaciones significativas y factores determinantes que inciden en la nota final y en los niveles de rendimiento académico.
+                     Analizar, modelar y predecir el rendimiento académico de los estudiantes a partir de variables académicas y de desempeño, mediante técnicas estadísticas descriptivas, inferenciales y de aprendizaje automático basadas en el algoritmo XGBoost, con el propósito de identificar patrones, relaciones significativas y factores determinantes que inciden en la nota final y en los niveles de rendimiento académico.
                     </p>
                 </div>
                 """, unsafe_allow_html=True)
@@ -409,9 +409,11 @@ def page_eda():
                         <br>
                         La <strong>clase Registro de Notas</strong> reúne las variables asociadas al desempeño académico, entre ellas las <strong>notas parciales</strong> (Nota 1, Nota 2, Nota 3 y Nota 4), la Nota Definitiva, la Nota de Habilitación y la Nota Final. Todas estas variables son de tipo <strong>numérico continuo</strong>.
                         <br>
-                        En la <strong>clase Desempeño Estudiantil</strong> se encuentra el atributo <strong>Rendimiento</strong>, definido como una variable categórica ordinal con cinco niveles: Deficiente, Bajo, Medio, Alto y Superior.
+                        En la <strong>clase Desempeño Estudiantil</strong> se encuentra el atributo <strong>Rendimiento</strong>, definido como una variable categórica ordinal con seis niveles: Insuficiente, Deficiente, Bajo, Medio, Alto y Superior.
                         <br>
                         Por último, la <strong>clase Datos Temporales</strong> contiene los atributos Año y Periodo, ambos definidos como <strong>variables numéricas discretas</strong>. En síntesis, la tabla organiza de manera estructurada la información del conjunto de datos, evidenciando que todas las variables cuentan con <strong>590.412 registros completos y sin valores faltantes</strong>, además de clasificar cada atributo según su tipo de dato y naturaleza.
+                        <br><br>
+                        Para explorar rápidamente la estructura de los datos, verificar el contenido de las variables y comprobar que la carga del conjunto de datos se haya realizado correctamente, se muestra las primeras observaciones:
                         </p>
                     </div>
                     """, unsafe_allow_html=True)
@@ -640,7 +642,7 @@ def page_eda():
                     En cuanto a Programa (Académico), que contiene 23 categorías, el más común es Derecho, con 66.000 registros. Esto equivale a una frecuencia relativa de 0.112 y un 11.20% del total de observaciones.
                     La variable Asignatura cuenta con 3.999 categorías diferentes, siendo INGLÉS I la más frecuente, con 6.072 apariciones. Su representación porcentual es de 1.00%, lo cual evidencia su baja proporción frente al total de registros.
                     Respecto al Grupo, con 86 categorías, la más repetida es A1, con 400.042 registros. Esta categoría concentra una frecuencia relativa de 0.6776, es decir, un 67.76% del total de casos.
-                    Por último, la variable Rendimiento, con 5 categorías posibles, tiene como valor más frecuente Alto, con 166.349 registros. Esto equivale a una frecuencia relativa de 0.2817 y un 28.18% del total de observaciones.
+                    Por último, la variable Rendimiento, con 6 categorías posibles, tiene como valor más frecuente Alto, con 166.349 registros. Esto equivale a una frecuencia relativa de 0.2817 y un 28.18% del total de observaciones.
                     </P>
                     </div>
                     """, unsafe_allow_html=True)   
@@ -1036,6 +1038,21 @@ def page_eda():
     #else:
         # Render HTML del Styler (mejor respeta el CSS del Styler)
     #    st.markdown(styled.to_html(), unsafe_allow_html=True)
+
+    st.markdown("""
+                    
+                    """)       
+    st.markdown("""
+                    <div>
+                    <p style='color:#444444; text-align:justify; font-size:20px; margin:0 0 12px 0;'> 
+                    El análisis comparativo del rendimiento académico por programa revela diferencias claras entre áreas. Los promedios más altos corresponden a Licenciatura en Educación Infantil (4.42) y Licenciatura en Educación (4.22), donde predomina el nivel Superior (cerca del 50% de los estudiantes). También destacan Comunicación Social (4.02) e Ingeniería Química/Historia (3.99), con fuerte presencia en los niveles Alto y Superior. En un rango intermedio se ubican programas como Medicina, Lenguas Extranjeras, Administración de Empresas y Derecho, con medias alrededor de 3.8 - 3.9. En contraste, los promedios más bajos se observan en Matemáticas (3.49), Biología (3.49), Ingeniería de Sistemas (3.48) y especialmente Filosofía (3.38), donde las categorías Deficiente y Bajo concentran una proporción importante.
+                    </P>
+                    </div>
+                    """, unsafe_allow_html=True)   
+    
+    st.markdown("""
+                    
+                    """)    
 #------------------------------------------------------------------------------------------------------------------------------------------------------------------------    
 
 #------------------------------------------------------------------------------------------------------------------------------------------------------------------------
@@ -1049,7 +1066,7 @@ def page_eda():
     st.markdown("""
                     <div>
                     <p style='color:#444444; text-align:justify; font-size:20px; margin:0 0 12px 0;'> 
-                    La siguiente gráfica de columnas muestra la evolución del valor medio de la nota final entre los años 2014 y 2023, diferenciado por períodos académicos (a saber: 1 semestre y 2 semestre). En general, los valores se mantienen relativamente estables en la mayoría de los años, con un comportamiento particular en el 2020 y 2021.
+                    La siguiente gráfica de columnas muestra la evolución del valor medio de la nota final entre los años 2014 y 2023, diferenciado por períodos académicos (1er semestre y 2do semestre). En general, los valores se mantienen relativamente estables en la mayoría de los años, con un comportamiento particular en el 2020 y 2021.
                     </P>
                     </div>
                     """, unsafe_allow_html=True)   
@@ -1132,6 +1149,8 @@ def page_eda():
                     A partir de 2022, los promedios retornan a niveles similares a los de años previos, ubicándose entre 3.75 y 3.71 en 2022 y en 3.76 y 3.73 en el 2023, lo que sugiere un regreso a la estabilidad después del repunte observado entre 2020 y el 2021.
                     <br><br>
                     En conclusión, la gráfica refleja un comportamiento estable en los promedios entre 2014 y 2019, un repunte significativo en 2020 y 2021 y un retorno a valores regulares en los años posteriores.
+                    <br><br>
+                    Visualizando esto en una tabla, se obverva que entre 2014 y 2019, el rendimiento académico por período se mantuvo estable, con proporciones constantes en cada categoría: aproximadamente 10% de estudiantes en nivel deficiente, 18% en bajo, 21% en medio, 24% en alto y 27% en superior.  Entre 2020 y 2023 se observa una evolución progresiva en el rendimiento académico, con variaciones significativas entre períodos. En 2020, el primer período muestra una mayor concentración en niveles altos y superiores (53.8%), mientras que el segundo período presenta un aumento en el nivel deficiente (de 4.4% a 8.6%), lo que sugiere una caída en el rendimiento en la segunda mitad del año. En 2021, el primer período mantiene una distribución similar al año anterior, pero el segundo período presenta una anomalía: todos los registros se agrupan en el nivel superior (100%). En 2022, ambos períodos muestran una distribución más equilibrada y finalmente, en 2023, el primer período presenta el porcentaje más alto de estudiantes en nivel deficiente (9.3%), mientras que el segundo período muestra una mejora (8.5%) y un aumento en el nivel superior (27.2%), lo que indica una recuperación en el rendimiento hacia el cierre del año.
                     </P>
                     </div>
                     """, unsafe_allow_html=True)   
@@ -1326,6 +1345,8 @@ def page_eda():
                     El estadístico KS evidenció diferencias en la magnitud de la desviación respecto a la normalidad. Los valores más bajos se observan en Nota Definitiva (KS = 0.1178) y Nota Final (KS = 0.1166), mientras que los más altos corresponden a Nota 4 (KS = 0.5280) y Nota de Habilitación (KS = 0.5356). Esto indica que, aunque todas las variables presentan una distribución no normal, el grado de desviación es mayor en algunas de ellas.
                     <br><br>
                     En síntesis, los resultados confirman que ninguna de las variables evaluadas cumple con el supuesto de normalidad, lo que implica la necesidad de emplear técnicas estadísticas no paramétricas o transformaciones adecuadas en el análisis posterior.                    
+                    <br><br>
+                    Esta ausencia de normalidad en las distribuciones resulta consistente con la naturaleza de las calificaciones, las cuales están acotadas en un rango específico y tienden a concentrarse en ciertos intervalos.
                     </P>
                     </div>
                     """, unsafe_allow_html=True)   
