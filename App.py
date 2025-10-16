@@ -19,6 +19,7 @@ import hashlib
 from pathlib import Path
 import requests 
 from scipy.stats import kstest, pearsonr, chi2_contingency, norm   
+import pickle
 
 
 
@@ -108,7 +109,7 @@ def page_objectives():
                 <div style='padding:8px 0; margin-bottom:8px;'>
                     <h1 style='color:#333333; font-size:24px; font-family: Tahoma, "Tahoma", Geneva, sans-serif; text-align:justify; text-justify:inter-word; line-height:1.6; margin:0;'> GENERAL </h1>
                     <p style='color:#333333; font-size:18px; font-family: Tahoma, "Tahoma", Geneva, sans-serif; text-align:justify; text-justify:inter-word; line-height:1.6; margin:0;'>
-                     Desarrollar un análisis estadístico (descriptivo e inferencial) en función del conjunto de datos denominados “Student Academic Record”, con el propósito de implementar y validar un modelo de Machine Learning (XGBoost) que permita estimar la probabilidad de deserción estudiantil en una Institución de Educación Superior de Colombia.
+                     Analizar, modelar y predecir el rendimiento académico de los estudiantes a partir de variables socioacadémicas y de desempeño, mediante técnicas estadísticas descriptivas, inferenciales y de aprendizaje automático basadas en el algoritmo XGBoost, con el propósito de identificar patrones, relaciones significativas y factores determinantes que inciden en la nota final y en los niveles de rendimiento académico.
                     </p>
                 </div>
                 """, unsafe_allow_html=True)
@@ -117,19 +118,23 @@ def page_objectives():
                 <div style='padding:8px 0; margin-bottom:8px;'>
                     <h1 style='color:#333333; font-size:24px; font-family: Tahoma, "Tahoma", Geneva, sans-serif; text-align:justify; text-justify:inter-word; line-height:1.6; margin:0;'> ESPECIFICOS </h1>
                     <p style='color:#333333; font-size:18px; font-family: Tahoma, "Tahoma", Geneva, sans-serif; text-align:justify; text-justify:inter-word; line-height:1.6; margin:0;'>
-                     - Identificar la estructura y características del conjunto de datos, resaltando sus dimensiones, tipos de varibles (𝑋𝑖: cuantitativas y cualitativas) y variable de interés (𝑌: dependiente).
-                    <br>
+                     - Identificar la estructura y características del conjunto de datos, resaltando sus dimensiones, tipos de varibles (𝑋𝑖: cuantitativas y cualitativas) y variable de interés (𝑌: dependiente). 
+                    <br><br>
                     </p>
                     <p style='color:#333333; font-size:18px; font-family: Tahoma, "Tahoma", Geneva, sans-serif; text-align:justify; text-justify:inter-word; line-height:1.6; margin:0;'>
-                     - Realizar un análisis exploratorio en función de la variable dependiente (𝑌), caracterizando su distribución y evaluando patrones, tendencias y posibles sesgos en los datos.
-                    <br>
+                     - Realizar un análisis exploratorio en función de la variable dependiente (𝑌), caracterizando su distribución y evaluando patrones, tendencias y posibles sesgos en los datos.
+                    <br><br>
                     </p>
                     <p style='color:#333333; font-size:18px; font-family: Tahoma, "Tahoma", Geneva, sans-serif; text-align:justify; text-justify:inter-word; line-height:1.6; margin:0;'>
-                     - Llevar a cabo un análisis estadístico de las variables numéricas y categóricas, con el fin de: verificar la normalidad de las distribuciones (Ho : Xi ∼ N(μ,σ2)), estimar correlaciones significativas entre variables cuantitativas (rSpearman) y analizar asociaciones entre variables categóricas mediante pruebas de independencia (𝜒2).
-                    <br>
+                     - Llevar a cabo un análisis estadístico de las variables numéricas con el fin de: verificar la normalidad de las distribuciones (Ho : Xi ∼ N(μ,σ2)), estimar correlaciones significativas entre variables cuantitativas (rPearson) y analizar asociaciones entre variables categóricas mediante pruebas de independencia (𝜒2).
+                    <br><br>
                     </p>
                     <p style='color:#333333; font-size:18px; font-family: Tahoma, "Tahoma", Geneva, sans-serif; text-align:justify; text-justify:inter-word; line-height:1.6; margin:0;'>
-                     - Aplicar un modelo de Machine Learning (XGBoost) que permita estimar la probabilidad de deserción estudiantil, formulada como un problema de clasificación binaria (Y ∈ {0,1}), evaluando métricas de desempeño (Accuracy, Precision, Recall, AUC).
+                     - Desarrollar y evaluar un modelo de clasificación ordinal utilizando el algoritmo XGBoost, con el propósito de predecir la variable “Rendimiento” e identificar las variables predictoras con mayor peso estadístico en la explicación del desempeño académico de los estudiantes.
+                    <br><br>
+                    </p>
+                    <p style='color:#333333; font-size:18px; font-family: Tahoma, "Tahoma", Geneva, sans-serif; text-align:justify; text-justify:inter-word; line-height:1.6; margin:0;'>
+                     - Implementar un modelo de regresión supervisada basado en XGBoost para estimar la variable continua “Nota Final”, a partir de las variables socioacadémicas y de rendimiento, analizando la magnitud y dirección de la contribución de cada predictor en la estimación del resultado académico.
                     </p>
                 </div>
                 """, unsafe_allow_html=True)
@@ -1640,28 +1645,72 @@ def page_eda():
 #------------------------------------------------------------------------------------------------------------------------------------------------------------------------    
 
 def page_model():
+
+    # Título 
+    st.markdown("""
+                    <div style='position:fixed; top:40px; left:400px; right:24px; background:#ffffff; padding:10px 16px; z-index:9999; border-bottom:1px solid rgba(0,0,0,0.06);'>
+                    <h1 style='color:#111111; font-weight:700; font-size:50px; margin:0;'>MODELO ESTADÍSTICO </h1>
+                </div>
+                    <div style='height:64px;'></div>
+                """, unsafe_allow_html=True)
+    
+        #Contenido 
     st.markdown("""
                 <div style='padding:8px 0; margin-bottom:8px;'>
-                    <h1 style='color:#111111; font-weight:700; font-size:32px; margin:0 0 6px 0;'>MODELO ESTADÍSTICO</h1>
-                    <p style='color:#333333; font-size:16px; margin:0;'>Descripción del enfoque de modelado y resultados principales.</p>
+                    <h1 style='color:#333333; font-size:24px; font-family: Tahoma, "Tahoma", Geneva, sans-serif; text-align:justify; text-justify:inter-word; line-height:1.6; margin:0;'> GENERAL </h1>
+                    <p style='color:#333333; font-size:18px; font-family: Tahoma, "Tahoma", Geneva, sans-serif; text-align:justify; text-justify:inter-word; line-height:1.6; margin:0;'>
+                    A continuación, puedes seleccionar un conjunto de variables para construir un modelo de regresión logística, por defecto se seleccionara la media del area, perimetro, concavidad y radio pero puedes eliminarlas o seleccionar mas variables. Una vez entrenado, podrás realizar predicciones de diagnóstico sobre nuevos datos ingresados manualmente.
+                    </p>
                 </div>
                 """, unsafe_allow_html=True)
+
+    #st.title("🩺 Predicción de Cáncer de Mama cargando un modelo Pickle")
+
+    # =====================
+    # Carga del pickle
+    # =====================
+
+    
+    #with open("modelo_cancer.pkl", "rb") as archivos:
+    #    data = pickle.load(archivos)
+
+    #modelo = data["modelo"]
+    #features = data["features"]
+
+    #st.write("Introduce los valores de las características:")
+
+
+    # =====================
+    # Crear inputs con valores por defecto en la media
+    # =====================
+
+    #medias = datos.drop(columns=["id", "diagnosis"]).mean()
+
+    #entrada_usuario = {}
+    #for col in features:
+    #    entrada_usuario[col] = st.number_input(
+    #        f"{col}",
+    #        value=float(medias[col]),   # valor medio por defecto
+    #        format="%.4f"
+    #)
+
 
 def page_conclusions():
-    st.markdown("""
-                <div style='padding:8px 0; margin-bottom:8px;'>
-                    <h1 style='color:#111111; font-weight:700; font-size:32px; margin:0 0 6px 0;'>CONCLUSIONES</h1>
-                    <p style='color:#333333; font-size:16px; margin:0;'>Resumen de hallazgos clave, limitaciones y recomendaciones.</p>
-                </div>
-                """, unsafe_allow_html=True)
+        st.markdown("""
+                    <div style='padding:8px 0; margin-bottom:8px;'>
+                        <h1 style='color:#111111; font-weight:700; font-size:32px; margin:0 0 6px 0;'>CONCLUSIONES</h1>
+                        <p style='color:#333333; font-size:16px; margin:0;'>Resumen de hallazgos clave, limitaciones y recomendaciones.</p>
+                    </div>
+                    """, unsafe_allow_html=True)
+
 
 def page_refs():
-    st.markdown("""
-                <div style='padding:8px 0; margin-bottom:8px;'>
-                    <h1 style='color:#111111; font-weight:700; font-size:32px; margin:0 0 6px 0;'>REFERENCIAS</h1>
-                    <p style='color:#333333; font-size:16px; margin:0;'>Enlaces, datasets y bibliografía utilizada en el análisis.</p>
-                </div>
-                """, unsafe_allow_html=True)
+        st.markdown("""
+                    <div style='padding:8px 0; margin-bottom:8px;'>
+                        <h1 style='color:#111111; font-weight:700; font-size:32px; margin:0 0 6px 0;'>REFERENCIAS</h1>
+                        <p style='color:#333333; font-size:16px; margin:0;'>Enlaces, datasets y bibliografía utilizada en el análisis.</p>
+                    </div>
+                    """, unsafe_allow_html=True)
 
 # Map routes to functions
 ROUTES = {
