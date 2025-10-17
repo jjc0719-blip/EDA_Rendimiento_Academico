@@ -1687,13 +1687,30 @@ def page_model():
     #            """, unsafe_allow_html=True)
 
     
-    # -----------------------------
-    # Carga de modelo y metadatos
-    # -----------------------------
+    # ============================================
+    # 0) Parche de compatibilidad sklearn (monkey-patch)
+    #    Para modelos serializados con otra versión
+    #    que usan sklearn.compose._column_transformer._RemainderColsList
+    # ============================================
+    def _try_monkey_patch_sklearn_for_remainder_cols_list():
+        try:
+            import sklearn.compose._column_transformer as _ct
+            if not hasattr(_ct, "_RemainderColsList"):
+                class _RemainderColsList(list):
+                    """Compat shim for objects pickled in other sklearn versions."""
+                    pass
+                _ct._RemainderColsList = _RemainderColsList
+        except Exception:
+            # Si falla, no interrumpimos la app: el loader manejará el error
+            pass
 
+    # ============================================
+    # 1) Utilidades de carga automática
+    # ============================================
     REQUIRED_KEYS = {"model", "classes", "vars_num", "vars_cat"}
 
     def _load_backend():
+        """Prefiere cloudpickle (soporta lambdas); si no, usa joblib."""
         try:
             import cloudpickle as cp
             return "cloudpickle", cp
@@ -1702,77 +1719,99 @@ def page_model():
             return "joblib", joblib
 
     def _candidate_paths():
-        # 1) Variable de entorno
+        """Orden de búsqueda: MODEL_PKL, modelo_xgb.pkl, primer .pkl de la carpeta."""
         env = os.getenv("MODEL_PKL")
         if env and os.path.isfile(env):
             yield env
-        # 2) Nombre por defecto
         default = "modelo_xgb.pkl"
         if os.path.isfile(default):
             yield default
-        # 3) Primer .pkl válido en la carpeta
         for p in glob.glob("*.pkl"):
             yield p
 
     @st.cache_resource
     def load_artifacts_auto():
+        """Carga el artefacto dict con claves requeridas, con reintento tras monkey-patch."""
         loader_name, loader_pkg = _load_backend()
         last_err = None
+
         for path in _candidate_paths():
+            # 1er intento de carga
             try:
                 if loader_name == "cloudpickle":
                     with open(path, "rb") as f:
                         data = loader_pkg.load(f)
                 else:
                     data = loader_pkg.load(path)
-
-                # Validación mínima
-                if not isinstance(data, dict) or not REQUIRED_KEYS.issubset(set(data.keys())):
-                    last_err = f"El archivo {path} no contiene las claves requeridas: {REQUIRED_KEYS}"
+            except AttributeError as e:
+                # Parche y reintento si es el caso de _RemainderColsList
+                if "_RemainderColsList" in str(e):
+                    _try_monkey_patch_sklearn_for_remainder_cols_list()
+                    try:
+                        if loader_name == "cloudpickle":
+                            with open(path, "rb") as f:
+                                data = loader_pkg.load(f)
+                        else:
+                            data = loader_pkg.load(path)
+                    except Exception as e2:
+                        last_err = f"{type(e2).__name__}: {e2}"
+                        continue
+                else:
+                    last_err = f"{type(e).__name__}: {e}"
                     continue
-
-                model      = data["model"]
-                classes    = data["classes"]
-                vars_num   = data["vars_num"]
-                vars_cat   = data["vars_cat"]
-                target     = data.get("target", "Rendimiento")
-                expected   = vars_cat + vars_num
-
-                meta = {
-                    "path": path,
-                    "loader": loader_name,
-                    "target": target,
-                    "expected_cols": expected,
-                }
-                return model, classes, vars_num, vars_cat, meta
             except Exception as e:
                 last_err = f"{type(e).__name__}: {e}"
+                continue
 
-        # Si llegó aquí, no encontró/abrió nada
+            # Validación del contenido
+            if not isinstance(data, dict) or not REQUIRED_KEYS.issubset(set(data.keys())):
+                last_err = f"El archivo {path} no contiene las claves requeridas: {REQUIRED_KEYS}"
+                continue
+
+            model      = data["model"]
+            classes    = data["classes"]
+            vars_num   = data["vars_num"]
+            vars_cat   = data["vars_cat"]
+            target     = data.get("target", "Rendimiento")
+            expected   = vars_cat + vars_num
+
+            meta = {
+                "path": path,
+                "loader": loader_name,
+                "target": target,
+                "expected_cols": expected,
+                # Si guardaste versiones del entorno al entrenar:
+                "env": data.get("env", None)
+            }
+            return model, classes, vars_num, vars_cat, meta
+
+        # Si no encontró nada válido:
         raise FileNotFoundError(
             last_err or "No se encontró un archivo .pkl válido. Coloca 'modelo_xgb.pkl' en esta carpeta o define MODEL_PKL."
         )
 
-    # ---------------------------
-    # UI
-    # ---------------------------
-    #st.set_page_config(page_title="Predicción de Rendimiento", layout="centered")
+    # ============================================
+    # 2) UI Streamlit
+    # ============================================
     st.title("📘 Predicción de Rendimiento (XGBoost)")
 
     # Carga automática al iniciar
     try:
         model, classes, vars_num, vars_cat, meta = load_artifacts_auto()
         #st.success(f"Modelo cargado automáticamente desde **{meta['path']}** usando **{meta['loader']}**.")
-        #st.caption(f"Target: **{meta['target']}** • Columnas esperadas: {', '.join(meta['expected_cols'])}")
+        cols_txt = ", ".join(meta["expected_cols"])
+        #st.caption(f"Target: **{meta['target']}** • Columnas esperadas: {cols_txt}")
+        if meta.get("env"):
+            st.caption("Entorno de entrenamiento: " + ", ".join([f"{k}={v}" for k, v in meta["env"].items()]))
     except Exception as e:
-        st.error(f"No se pudo cargar el modelo automáticamente: {e}")
+        #st.error(f"No se pudo cargar el modelo automáticamente: {e}")
         st.stop()
 
-    tabs = st.tabs(["🔹 Predicción manual", "📤 Predicción por CSV"])
+    tabs = st.tabs(["🔹 Predicción Rendimiento", "📤 Predicción Masiva por CSV"])
 
     # ---------- Predicción manual ----------
     with tabs[0]:
-        #st.subheader("Ingresar una observación")
+        st.subheader("Ingresar una observación")
         col1, col2 = st.columns(2)
         with col1:
             programa  = st.text_input("Programa", value="Ingeniería")
@@ -1783,7 +1822,7 @@ def page_model():
             nota2      = st.number_input("Nota 2", value=4.0, step=0.1, format="%.2f")
             nota4      = st.number_input("Nota 4", value=4.2, step=0.1, format="%.2f")
 
-        if st.button("Predecir"):
+        if st.button("Predecir Rendimiento"):
             try:
                 df_input = pd.DataFrame([{
                     "Programa": programa,
@@ -1817,13 +1856,14 @@ def page_model():
 
     # ---------- Predicción por CSV ----------
     with tabs[1]:
-        st.subheader("Cargar CSV con columnas esperadas")
+        st.subheader("Cargar CSV para predicciones masivas")
         st.caption(f"Se esperan exactamente estas columnas: {', '.join(meta['expected_cols'])}")
         file = st.file_uploader("Selecciona un archivo CSV", type=["csv"])
 
         if file is not None:
             try:
                 df_csv = pd.read_csv(file)
+
                 # Crear faltantes y ordenar columnas
                 for c in meta["expected_cols"]:
                     if c not in df_csv.columns:
@@ -1860,9 +1900,8 @@ def page_model():
             except Exception as e:
                 st.error(f"Error procesando el CSV: {e}")
 
-    #st.markdown("---")
-    #st.caption("Consejo: puedes definir la ruta exacta con la variable de entorno `MODEL_PKL`. Ej.: `MODEL_PKL=/ruta/modelo_xgb.pkl streamlit run app.py`")
- 
+
+
     
 
 
