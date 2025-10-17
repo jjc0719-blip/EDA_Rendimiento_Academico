@@ -1798,13 +1798,13 @@ def page_model():
     # Carga automática al iniciar
     try:
         model, classes, vars_num, vars_cat, meta = load_artifacts_auto()
-        #st.success(f"Modelo cargado automáticamente desde **{meta['path']}** usando **{meta['loader']}**.")
+        st.success(f"Modelo cargado automáticamente desde **{meta['path']}** usando **{meta['loader']}**.")
         cols_txt = ", ".join(meta["expected_cols"])
-        #st.caption(f"Target: **{meta['target']}** • Columnas esperadas: {cols_txt}")
+        st.caption(f"Target: **{meta['target']}** • Columnas esperadas: {cols_txt}")
         if meta.get("env"):
             st.caption("Entorno de entrenamiento: " + ", ".join([f"{k}={v}" for k, v in meta["env"].items()]))
     except Exception as e:
-        #st.error(f"No se pudo cargar el modelo automáticamente: {e}")
+        st.error(f"No se pudo cargar el modelo automáticamente: {e}")
         st.stop()
 
     tabs = st.tabs(["🔹 Predicción Rendimiento", "📤 Predicción Masiva por CSV"])
