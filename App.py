@@ -1256,158 +1256,13 @@ def page_eda():
     st.dataframe(tabla_fmt, use_container_width=True, height=500)
     #else:
     #    st.markdown(styled.to_html(), unsafe_allow_html=True)
-
+  
 #------------------------------------------------------------------------------------------------------------------------------------------------------------------------    
 
 #------------------------------------------------------------------------------------------------------------------------------------------------------------------------
     st.markdown("""
                 <div
-                    <h2 style='color:#111111; font-weight:600; font-size:30px; margin:18px 0 6px 0;'>3.7.PRUEBA DE NORMALIDAD: KOLMOGOROV-SMIRNOV</h2>
-                    <br>
-                </div>
-                """, unsafe_allow_html=True)     
- 
-    st.markdown("""
-                    <div>
-                    <p style='color:#444444; text-align:justify; font-size:20px; margin:0 0 12px 0;'> 
-                    La siguiente tabla presenta los resultados de la prueba de normalidad (Kolmogorov-Smirnov) aplicada a las variables relacionadas con el Record de Notas. En ella se muestran el estadístico de prueba, el valor p asociado y la interpretación correspondiente sobre la normalidad de los datos.                    
-                    </P>
-                    </div>
-                    """, unsafe_allow_html=True)   
-    
-    st.markdown("""
-                    
-                    """) 
-
-    # ==============================================
-    # Prueba de normalidad Kolmogorov-Smirnov
-    # ==============================================
-
-    # Lista de variables a evaluar
-    variables = ["Nota 1", "Nota 2", "Nota 3",
-                "Nota 4", "Nota Definitiva",
-                "Nota Habilitación", "Nota Final"]
-
-    # Contenedor de resultados
-    resultados = []
-
-    for var in variables:
-        datos = df[var].dropna()
-
-        if len(datos) < 5:
-            resultados.append({
-                "Variable": var,
-                "KS Statistic": None,
-                "p-valor": None,
-                "Interpretación": "Insuficientes datos"
-            })
-            continue
-
-        # Estandarizar los datos (media 0, varianza 1)
-        datos_std = (datos - datos.mean()) / datos.std(ddof=0)
-
-        # Prueba KS contra N(0,1)
-        ks_stat, p_value = kstest(datos_std, 'norm')
-
-        resultados.append({
-            "Variable": var,
-            "KS Statistic": ks_stat,
-            "p-valor": p_value,
-            "Interpretación": (
-                "✅ No se rechaza normalidad" if p_value > 0.05 
-                else "❌ Se rechaza normalidad"
-            )
-        })
-
-    # Convertir resultados a DataFrame
-    resultados_df = pd.DataFrame(resultados)
-
-    # Formatear columnas numéricas
-    resultados_df["KS Statistic"] = resultados_df["KS Statistic"].map(lambda x: f"{x:.4f}" if pd.notnull(x) else "")
-    resultados_df["p-valor"] = resultados_df["p-valor"].map(lambda x: f"{x:.4e}" if pd.notnull(x) else "")
-
-    # Mostrar resultados en Streamlit
-    st.dataframe(
-        resultados_df,
-        use_container_width=True,
-        hide_index=True
-    )
-    
-    st.markdown("""
-                    
-                    """) 
-    
-    st.markdown("""
-                    <div>
-                    <p style='color:#444444; text-align:justify; font-size:20px; margin:0 0 12px 0;'> 
-                    En todas las variables analizadas (Nota 1, Nota 2, Nota 3, Nota 4, Nota Definitiva, Nota de Habilitación y Nota Final), el p-valor obtenido en la prueba de Kolmogorov-Smirnov fue 0.0000e+00, valor inferior al nivel de significancia de α = 0.05. En consecuencia, se rechaza la hipótesis nula de normalidad en todas las distribuciones.
-                    <br><br>
-                    El estadístico KS evidenció diferencias en la magnitud de la desviación respecto a la normalidad. Los valores más bajos se observan en Nota Definitiva (KS = 0.1178) y Nota Final (KS = 0.1166), mientras que los más altos corresponden a Nota 4 (KS = 0.5280) y Nota de Habilitación (KS = 0.5356). Esto indica que, aunque todas las variables presentan una distribución no normal, el grado de desviación es mayor en algunas de ellas.
-                    <br><br>
-                    En síntesis, los resultados confirman que ninguna de las variables evaluadas cumple con el supuesto de normalidad, lo que implica la necesidad de emplear técnicas estadísticas no paramétricas o transformaciones adecuadas en el análisis posterior.                    
-                    <br><br>
-                    Esta ausencia de normalidad en las distribuciones resulta consistente con la naturaleza de las calificaciones, las cuales están acotadas en un rango específico y tienden a concentrarse en ciertos intervalos.
-                    </P>
-                    </div>
-                    """, unsafe_allow_html=True)   
-    
-    st.markdown("""
-                    
-                    """) 
-    # ==============================================
-    # Gráficos de Distribución por Variable
-    # ==============================================
-
-    #st.subheader("📊 Distribuciones y Curvas Normales de las Notas")
-
-    #variables = ["Nota 1", "Nota 2", "Nota 3",
-    #            "Nota 4", "Nota Definitiva",
-    #            "Nota Habilitación", "Nota Final"]
-
-    # Crear figura y ejes (3x3)
-    #fig, axes = plt.subplots(3, 3, figsize=(15, 12))
-    #axes = axes.flatten()
-
-    #for i, var in enumerate(variables):
-    #    datos = df[var].dropna()
-    #    if len(datos) == 0:
-    #        continue
-
-        # Calcular media y desviación estándar
-    #   mu, sigma = datos.mean(), datos.std(ddof=0)
-
-        # Histograma de los datos
-    #    axes[i].hist(datos, bins=15, density=True, alpha=0.6,
-    #                color='skyblue', edgecolor='black', label='Datos')
-
-        # Curva normal teórica
-    #    x = np.linspace(min(datos), max(datos), 100)
-    #    y = norm.pdf(x, mu, sigma)
-    #    axes[i].plot(x, y, 'r-', lw=2, label=f'N({mu:.2f}, {sigma:.2f}²)')
-
-        # Estilo del subplot
-    #    axes[i].set_title(f"Distribución de {var}")
-    #    axes[i].set_xlabel(var)
-    #    axes[i].set_ylabel("Densidad")
-    #    axes[i].grid(True, linestyle="--", alpha=0.6)
-    #    axes[i].legend()
-
-    # Eliminar subplots vacíos
-    #for j in range(len(variables), len(axes)):
-    #    fig.delaxes(axes[j])
-
-    #plt.tight_layout()
-
-    # Mostrar gráfico en Streamlit
-    #st.pyplot(fig)
-    
-    
-#------------------------------------------------------------------------------------------------------------------------------------------------------------------------    
-
-#------------------------------------------------------------------------------------------------------------------------------------------------------------------------
-    st.markdown("""
-                <div
-                    <h2 style='color:#111111; font-weight:600; font-size:30px; margin:18px 0 6px 0;'>3.8.PRUEBA NO PARAMÉTRICA: CORRELACIÓN DE PEARSON</h2>
+                    <h2 style='color:#111111; font-weight:600; font-size:30px; margin:18px 0 6px 0;'>3.7.PRUEBA PARAMÉTRICA: CORRELACIÓN DE PEARSON</h2>
                     <br>
                 </div>
                 """, unsafe_allow_html=True)     
@@ -1584,7 +1439,7 @@ def page_eda():
 #------------------------------------------------------------------------------------------------------------------------------------------------------------------------
     st.markdown("""
                 <div
-                    <h2 style='color:#111111; font-weight:600; font-size:30px; margin:18px 0 6px 0;'>3.9.PRUEBA DE INDEPENDENCIA: PRUEBA CHI-CUADRADO</h2>
+                    <h2 style='color:#111111; font-weight:600; font-size:30px; margin:18px 0 6px 0;'>3.8.PRUEBA DE INDEPENDENCIA: PRUEBA CHI-CUADRADO</h2>
                     <br>
                 </div>
                 """, unsafe_allow_html=True)     
@@ -1793,14 +1648,14 @@ def page_model():
     # ============================================
     # 2) UI Streamlit
     # ============================================
-    st.title("📘 Predicción de Rendimiento (XGBoost)")
+    #st.title("📘 Predicción de Rendimiento (XGBoost)")
 
     # Carga automática al iniciar
     try:
         model, classes, vars_num, vars_cat, meta = load_artifacts_auto()
         st.success(f"Modelo cargado automáticamente desde **{meta['path']}** usando **{meta['loader']}**.")
-        cols_txt = ", ".join(meta["expected_cols"])
-        st.caption(f"Target: **{meta['target']}** • Columnas esperadas: {cols_txt}")
+        #cols_txt = ", ".join(meta["expected_cols"])
+        #t.caption(f"Target: **{meta['target']}** • Columnas esperadas: {cols_txt}")
         if meta.get("env"):
             st.caption("Entorno de entrenamiento: " + ", ".join([f"{k}={v}" for k, v in meta["env"].items()]))
     except Exception as e:
@@ -1811,7 +1666,7 @@ def page_model():
 
     # ---------- Predicción manual ----------
     with tabs[0]:
-        st.subheader("Ingresar una observación")
+        #st.subheader("Ingresar una observación")
         col1, col2 = st.columns(2)
         with col1:
             programa  = st.text_input("Programa", value="Ingeniería")
@@ -1857,6 +1712,8 @@ def page_model():
     # ---------- Predicción por CSV ----------
     with tabs[1]:
         st.subheader("Cargar CSV para predicciones masivas")
+        cols_txt = ", ".join(meta["expected_cols"])
+        st.caption(f"Target: **{meta['target']}** • Columnas esperadas: {cols_txt}")
         st.caption(f"Se esperan exactamente estas columnas: {', '.join(meta['expected_cols'])}")
         file = st.file_uploader("Selecciona un archivo CSV", type=["csv"])
 
