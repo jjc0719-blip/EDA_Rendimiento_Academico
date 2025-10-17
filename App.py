@@ -1677,42 +1677,192 @@ def page_model():
                 """, unsafe_allow_html=True)
     
         #Contenido 
-    st.markdown("""
-                <div style='padding:8px 0; margin-bottom:8px;'>
-                    <h1 style='color:#333333; font-size:24px; font-family: Tahoma, "Tahoma", Geneva, sans-serif; text-align:justify; text-justify:inter-word; line-height:1.6; margin:0;'> GENERAL </h1>
-                    <p style='color:#333333; font-size:18px; font-family: Tahoma, "Tahoma", Geneva, sans-serif; text-align:justify; text-justify:inter-word; line-height:1.6; margin:0;'>
-                    A continuación, puedes seleccionar un conjunto de variables para construir un modelo de regresión logística, por defecto se seleccionara la media del area, perimetro, concavidad y radio pero puedes eliminarlas o seleccionar mas variables. Una vez entrenado, podrás realizar predicciones de diagnóstico sobre nuevos datos ingresados manualmente.
-                    </p>
-                </div>
-                """, unsafe_allow_html=True)
+    #st.markdown("""
+    #            <div style='padding:8px 0; margin-bottom:8px;'>
+    #                <h1 style='color:#333333; font-size:24px; font-family: Tahoma, "Tahoma", Geneva, sans-serif; text-align:justify; text-justify:inter-word; line-height:1.6; margin:0;'> GENERAL </h1>
+    #                <p style='color:#333333; font-size:18px; font-family: Tahoma, "Tahoma", Geneva, sans-serif; text-align:justify; text-justify:inter-word; line-height:1.6; margin:0;'>
+    #                A continuación, puedes seleccionar un conjunto de variables para construir un modelo de regresión logística, por defecto se seleccionara la media del area, perimetro, concavidad y radio pero puedes eliminarlas o seleccionar mas variables. Una vez entrenado, podrás realizar predicciones de diagnóstico sobre nuevos datos ingresados manualmente.
+    #                </p>
+    #            </div>
+    #            """, unsafe_allow_html=True)
 
     
     # -----------------------------
     # Carga de modelo y metadatos
     # -----------------------------
+
+    REQUIRED_KEYS = {"model", "classes", "vars_num", "vars_cat"}
+
+    def _load_backend():
+        try:
+            import cloudpickle as cp
+            return "cloudpickle", cp
+        except Exception:
+            import joblib
+            return "joblib", joblib
+
+    def _candidate_paths():
+        # 1) Variable de entorno
+        env = os.getenv("MODEL_PKL")
+        if env and os.path.isfile(env):
+            yield env
+        # 2) Nombre por defecto
+        default = "modelo_xgb.pkl"
+        if os.path.isfile(default):
+            yield default
+        # 3) Primer .pkl válido en la carpeta
+        for p in glob.glob("*.pkl"):
+            yield p
+
     @st.cache_resource
-    def cargar_modelo(ruta="Modelo_xgb.pkl"):
-        with open(ruta, "rb") as f:
-            data = pickle.load(f)
+    def load_artifacts_auto():
+        loader_name, loader_pkg = _load_backend()
+        last_err = None
+        for path in _candidate_paths():
+            try:
+                if loader_name == "cloudpickle":
+                    with open(path, "rb") as f:
+                        data = loader_pkg.load(f)
+                else:
+                    data = loader_pkg.load(path)
 
-        meta = {"features": [], "categorias": {}, "label_classes": None}
-        if isinstance(data, dict):
-            modelo = data.get("modelo", data)
-            meta["features"] = data.get("features", [])
-            meta["categorias"] = data.get("categorias", {})
-            meta["label_classes"] = data.get("label_classes", None)
-        else:
-            modelo = data
-        return modelo, meta
+                # Validación mínima
+                if not isinstance(data, dict) or not REQUIRED_KEYS.issubset(set(data.keys())):
+                    last_err = f"El archivo {path} no contiene las claves requeridas: {REQUIRED_KEYS}"
+                    continue
 
-    modelo, meta = cargar_modelo()
-    st.success("✅ Modelo cargado")
+                model      = data["model"]
+                classes    = data["classes"]
+                vars_num   = data["vars_num"]
+                vars_cat   = data["vars_cat"]
+                target     = data.get("target", "Rendimiento")
+                expected   = vars_cat + vars_num
 
-    st.title("🎯 Predicción de Rendimiento")
-    st.write("**Tipo de modelo:**", type(modelo))
-    st.write("**Features (columnas usadas):**", meta.get("features", []))
-    st.write("**Variables categóricas:**", meta.get("categorias", {}))
-    st.write("**Clases de etiqueta:**", meta.get("label_classes", None))
+                meta = {
+                    "path": path,
+                    "loader": loader_name,
+                    "target": target,
+                    "expected_cols": expected,
+                }
+                return model, classes, vars_num, vars_cat, meta
+            except Exception as e:
+                last_err = f"{type(e).__name__}: {e}"
+
+        # Si llegó aquí, no encontró/abrió nada
+        raise FileNotFoundError(
+            last_err or "No se encontró un archivo .pkl válido. Coloca 'modelo_xgb.pkl' en esta carpeta o define MODEL_PKL."
+        )
+
+    # ---------------------------
+    # UI
+    # ---------------------------
+    #st.set_page_config(page_title="Predicción de Rendimiento", layout="centered")
+    st.title("📘 Predicción de Rendimiento (XGBoost)")
+
+    # Carga automática al iniciar
+    try:
+        model, classes, vars_num, vars_cat, meta = load_artifacts_auto()
+        #st.success(f"Modelo cargado automáticamente desde **{meta['path']}** usando **{meta['loader']}**.")
+        #st.caption(f"Target: **{meta['target']}** • Columnas esperadas: {', '.join(meta['expected_cols'])}")
+    except Exception as e:
+        st.error(f"No se pudo cargar el modelo automáticamente: {e}")
+        st.stop()
+
+    tabs = st.tabs(["🔹 Predicción manual", "📤 Predicción por CSV"])
+
+    # ---------- Predicción manual ----------
+    with tabs[0]:
+        #st.subheader("Ingresar una observación")
+        col1, col2 = st.columns(2)
+        with col1:
+            programa  = st.text_input("Programa", value="Ingeniería")
+            nota1     = st.number_input("Nota 1", value=3.5, step=0.1, format="%.2f")
+            nota3     = st.number_input("Nota 3", value=3.8, step=0.1, format="%.2f")
+        with col2:
+            asignatura = st.text_input("Asignatura", value="Matemáticas")
+            nota2      = st.number_input("Nota 2", value=4.0, step=0.1, format="%.2f")
+            nota4      = st.number_input("Nota 4", value=4.2, step=0.1, format="%.2f")
+
+        if st.button("Predecir"):
+            try:
+                df_input = pd.DataFrame([{
+                    "Programa": programa,
+                    "Asignatura": asignatura,
+                    "Nota 1": nota1,
+                    "Nota 2": nota2,
+                    "Nota 3": nota3,
+                    "Nota 4": nota4
+                }])
+
+                # Alinear columnas y tipos
+                df_input = df_input.reindex(columns=meta["expected_cols"])
+                for c in vars_num:
+                    df_input[c] = pd.to_numeric(df_input[c], errors="coerce")
+
+                y_idx = model.predict(df_input)
+                try:
+                    y_prob = model.predict_proba(df_input)
+                except Exception:
+                    y_prob = None
+
+                y_label = [classes[i] for i in y_idx][0]
+                st.markdown(f"**Predicción:** {y_label}")
+
+                if y_prob is not None:
+                    prob_df = pd.DataFrame(y_prob, columns=classes)
+                    st.markdown("**Probabilidades:**")
+                    st.dataframe(prob_df.style.format("{:.4f}"))
+            except Exception as e:
+                st.error(f"Error en predicción: {e}")
+
+    # ---------- Predicción por CSV ----------
+    with tabs[1]:
+        st.subheader("Cargar CSV con columnas esperadas")
+        st.caption(f"Se esperan exactamente estas columnas: {', '.join(meta['expected_cols'])}")
+        file = st.file_uploader("Selecciona un archivo CSV", type=["csv"])
+
+        if file is not None:
+            try:
+                df_csv = pd.read_csv(file)
+                # Crear faltantes y ordenar columnas
+                for c in meta["expected_cols"]:
+                    if c not in df_csv.columns:
+                        df_csv[c] = np.nan
+                df_csv = df_csv.reindex(columns=meta["expected_cols"])
+                for c in vars_num:
+                    df_csv[c] = pd.to_numeric(df_csv[c], errors="coerce")
+
+                y_idx = model.predict(df_csv)
+                y_labels = [classes[i] for i in y_idx]
+
+                try:
+                    y_prob = model.predict_proba(df_csv)
+                    prob_cols = [f"prob_{c}" for c in classes]
+                    out = pd.concat(
+                        [df_csv, pd.Series(y_labels, name="pred_clase"),
+                        pd.DataFrame(y_prob, columns=prob_cols)],
+                        axis=1
+                    )
+                except Exception:
+                    out = pd.concat([df_csv, pd.Series(y_labels, name="pred_clase")], axis=1)
+
+                st.success(f"Predicciones generadas: {len(out)} filas.")
+                st.dataframe(out.head(50))
+
+                buf = io.StringIO()
+                out.to_csv(buf, index=False)
+                st.download_button(
+                    "⬇️ Descargar resultados CSV",
+                    data=buf.getvalue(),
+                    file_name="predicciones.csv",
+                    mime="text/csv"
+                )
+            except Exception as e:
+                st.error(f"Error procesando el CSV: {e}")
+
+    #st.markdown("---")
+    #st.caption("Consejo: puedes definir la ruta exacta con la variable de entorno `MODEL_PKL`. Ej.: `MODEL_PKL=/ruta/modelo_xgb.pkl streamlit run app.py`")
+ 
     
 
 
