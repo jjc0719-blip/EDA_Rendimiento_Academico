@@ -1,8 +1,8 @@
 streamlit
 nbformat
 matplotlib
-numpy==2.0.2
-pandas==2.3.3
+numpy
+pandas
 scipy
 tabulate
 ipython
@@ -15,12 +15,11 @@ fastparquet
 openpyxl
 streamlit-option-menu
 joblib
-xgboost==2.1.4
+xgboost
 tabulate
 bokeh
 chart-studio
 sweetviz
 plotly-express
-cloudpickle==3.1.1
+cloudpickle
 skops
-sklearn==1.6.1
