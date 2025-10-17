@@ -1,4 +1,4 @@
-streamlit=1.50.0
+streamlit==1.50.0
 nbformat
 matplotlib
 numpy==2.0.2
@@ -23,4 +23,5 @@ sweetviz
 plotly-express
 cloudpickle==3.1.1
 skops
+
 sklearn==1.6.1
