@@ -23,5 +23,7 @@ sweetviz
 plotly-express
 cloudpickle==3.1.1
 skops
+
 sklearn==1.6.1
+
 
