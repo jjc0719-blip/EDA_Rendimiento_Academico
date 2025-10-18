@@ -365,7 +365,7 @@ def page_eda():
                 ("Información Académica", "Código Asignatura", "Categórica / Nominal", "590412", "0"),
                 ("Información Académica", "Asignatura / Materia", "Categórica / Nominal", "590412", "0"),
                 ("Información Académica", "Grupo", "Categórica / Nominal", "590412", "0"),
-                ("Información Académica", "Código Estudiantil", "Numérica / Continua",  "590412", "0"),
+                ("Información Académica", "Código Estudiantil", "Numérica / Discreta",  "590412", "0"),
                 ("Record de Notas", "Nota 1", "Numérica / Continua", "590412", "0"),
                 ("Record de Notas", "Nota 2", "Numérica / Continua", "590412", "0"),
                 ("Record de Notas", "Nota 3", "Numérica / Continua", "590412", "0"),
@@ -1515,7 +1515,7 @@ def page_eda():
     st.markdown("""
                     <div>
                     <p style='color:#444444; text-align:justify; font-size:20px; margin:0 0 12px 0;'> 
-                    En primer lugar, se encontró que el Rendimiento (académico) depende del Programa (académico) en el que se encuentra matriculado el estudiante. Esto significa que la distribución de los niveles de Rendimiento (Deficiente, Bajo, Medio, Alto y Superior) no es homogénea entre los diferentes programas, sino que algunos de ellos tienden a concentrar mayor o menor proporción de estudiantes con Rendimientos destacados y, en segundo lugar, al analizar la relación entre las Asignaturas y el Rendimiento (académico), se observó una asociación aún más fuerte. Esto refleja que el tipo de Asignatura influye significativamente en el desempeño de los estudiantes.
+                    En primer lugar, se encontró que el Rendimiento (académico) depende del Programa (académico) en el que se encuentra matriculado el estudiante. Esto significa que la distribución de los niveles de Rendimiento (Insudiciente, Deficiente, Bajo, Medio, Alto y Superior) no es homogénea entre los diferentes programas, sino que algunos de ellos tienden a concentrar mayor o menor proporción de estudiantes con Rendimientos destacados y, en segundo lugar, al analizar la relación entre las Asignaturas y el Rendimiento (académico), se observó una asociación aún más fuerte. Esto refleja que el tipo de Asignatura influye significativamente en el desempeño de los estudiantes.
                     </P>
                     </div>
                     """, unsafe_allow_html=True)   
@@ -1798,7 +1798,7 @@ def page_model():
     st.markdown("""
                 <div style='padding:8px 0; margin-bottom:8px;'>
                     <p style='color:#333333; font-size:18px; font-family: Tahoma, "Tahoma", Geneva, sans-serif; text-align:justify; text-justify:inter-word; line-height:1.6; margin:0;'>
-                    El modelo predice la categoría de rendimiento esperada —desde Deficiente hasta Superior— utilizando los patrones de aprendizaje adquiridos durante su fase de entrenamiento con XGBoost.
+                    El modelo predice la categoría de rendimiento esperada —desde Insuficiente hasta Superior— utilizando los patrones de aprendizaje adquiridos durante su fase de entrenamiento con XGBoost.
                     A partir de las notas ingresadas y las variables contextuales (como el programa académico y la asignatura), el modelo evalúa la probabilidad de pertenencia a cada nivel de desempeño y selecciona la categoría más probable, reflejando la estructura ordinal y continua del rendimiento estudiantil
                     </p>
                     </div>
