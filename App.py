@@ -23,8 +23,7 @@ import pickle
 import traceback    
 
 
-
-st.set_page_config(page_title="Análisis Exploratorio del Rendimiento Académico de Estudiantes Universitarios",
+st.set_page_config(page_title="Modelado del Rendimiento Académicos de Estudiantes Universitarios de Programas de Pregrado Presencial con el algoritmo XGBoost",
                    layout="wide")
 
 # Sidebar configuration
@@ -32,7 +31,7 @@ with st.sidebar:
     # Sidebar header (bold + larger font)
     st.markdown(
         """
-        <h1 style='text-align: left; font-weight: 700; font-family: Tahoma, "Tahoma", Geneva, sans-serif; font-size: 30px;'>Análisis Exploratorio del Rendimiento Académico de Estudiantes Universitarios</h1>
+        <h1 style='text-align: left; font-weight: 600; font-family: Tahoma, "Tahoma", Geneva, sans-serif; font-size: 26px;'>🎓 Modelado del Rendimiento Académicos de Estudiantes Universitarios de Programas de Pregrado Presencial con el algoritmo XGBoost</h1>
         """,
         unsafe_allow_html=True,
     )
@@ -44,7 +43,7 @@ with st.sidebar:
     # Navigation menu
     choice = option_menu(
         "Capítulos",
-        ["Introducción", "Objetivos", "Exploración de Datos (EDA)","Modelo", "Conclusiones", "Referencias"],
+        ["Introducción", "Objetivos", "Exploración de Datos (EDA)","Modelo Predicción", "Conclusiones", "Referencias"],
         icons=["book", "bullseye", "bar-chart","collection-play", "pencil", "bookmarks"],
         menu_icon="cast",
         default_index=0,
@@ -132,10 +131,6 @@ def page_objectives():
                     </p>
                     <p style='color:#333333; font-size:18px; font-family: Tahoma, "Tahoma", Geneva, sans-serif; text-align:justify; text-justify:inter-word; line-height:1.6; margin:0;'>
                      - Desarrollar y evaluar un modelo de clasificación ordinal utilizando el algoritmo XGBoost, con el propósito de predecir la variable “Rendimiento” e identificar las variables predictoras con mayor peso estadístico en la explicación del desempeño académico de los estudiantes.
-                    <br><br>
-                    </p>
-                    <p style='color:#333333; font-size:18px; font-family: Tahoma, "Tahoma", Geneva, sans-serif; text-align:justify; text-justify:inter-word; line-height:1.6; margin:0;'>
-                     - Implementar un modelo de regresión supervisada basado en XGBoost para estimar la variable continua “Nota Final”, a partir de las variables socioacadémicas y de rendimiento, analizando la magnitud y dirección de la contribución de cada predictor en la estimación del resultado académico.
                     </p>
                 </div>
                 """, unsafe_allow_html=True)
@@ -153,8 +148,8 @@ def page_eda():
                 """, unsafe_allow_html=True)
     st.markdown("""
                 <div
+                    <br><br>
                     <h1 style='color:#111111; font-weight:600; font-size:30px; margin:18px 0 6px 0;'>1. TRANSFORMACIÓN DE DATOS</h1>
-                    <br>
                     <p style='color:#444444; text-align:justify; font-size:20px; margin:0 0 12px 0;'>Antes de realizar el Análisis Exploratorio de los Datos, es necesario preparar y transformar la información en diferentes formatos que faciliten su comprensión y procesamiento. Para ello, se emplean diversos paquetes y librerías que proporcionan funciones diseñadas para organizar, limpiar y estructurar los datos de manera eficiente.
                      A continuación, se presentan las principales características del DataFrame y se ejecutarán las transformaciones necesarias para dar inicio al análisis detallado de la información.</p>
                 </div>
@@ -1149,8 +1144,6 @@ def page_eda():
                     A partir de 2022, los promedios retornan a niveles similares a los de años previos, ubicándose entre 3.75 y 3.71 en 2022 y en 3.76 y 3.73 en el 2023, lo que sugiere un regreso a la estabilidad después del repunte observado entre 2020 y el 2021.
                     <br><br>
                     En conclusión, la gráfica refleja un comportamiento estable en los promedios entre 2014 y 2019, un repunte significativo en 2020 y 2021 y un retorno a valores regulares en los años posteriores.
-                    <br><br>
-                    Visualizando esto en una tabla, se obverva que entre 2014 y 2019, el rendimiento académico por período se mantuvo estable, con proporciones constantes en cada categoría: aproximadamente 10% de estudiantes en nivel deficiente, 18% en bajo, 21% en medio, 24% en alto y 27% en superior.  Entre 2020 y 2023 se observa una evolución progresiva en el rendimiento académico, con variaciones significativas entre períodos. En 2020, el primer período muestra una mayor concentración en niveles altos y superiores (53.8%), mientras que el segundo período presenta un aumento en el nivel deficiente (de 4.4% a 8.6%), lo que sugiere una caída en el rendimiento en la segunda mitad del año. En 2021, el primer período mantiene una distribución similar al año anterior, pero el segundo período presenta una anomalía: todos los registros se agrupan en el nivel superior (100%). En 2022, ambos períodos muestran una distribución más equilibrada y finalmente, en 2023, el primer período presenta el porcentaje más alto de estudiantes en nivel deficiente (9.3%), mientras que el segundo período muestra una mejora (8.5%) y un aumento en el nivel superior (27.2%), lo que indica una recuperación en el rendimiento hacia el cierre del año.
                     </P>
                     </div>
                     """, unsafe_allow_html=True)   
@@ -1256,7 +1249,18 @@ def page_eda():
     st.dataframe(tabla_fmt, use_container_width=True, height=500)
     #else:
     #    st.markdown(styled.to_html(), unsafe_allow_html=True)
-  
+
+    st.markdown("""
+                    <div>
+                    <p style='color:#444444; text-align:justify; font-size:20px; margin:0 0 12px 0;'> 
+                    Visualizando esto en una tabla, se obverva que entre 2014 y 2019, el rendimiento académico por período se mantuvo estable, con proporciones constantes en cada categoría: aproximadamente 10% de estudiantes en nivel deficiente, 18% en bajo, 21% en medio, 24% en alto y 27% en superior.  Entre 2020 y 2023 se observa una evolución progresiva en el rendimiento académico, con variaciones significativas entre períodos. En 2020, el primer período muestra una mayor concentración en niveles altos y superiores (53.8%), mientras que el segundo período presenta un aumento en el nivel deficiente (de 4.4% a 8.6%), lo que sugiere una caída en el rendimiento en la segunda mitad del año. En 2021, el primer período mantiene una distribución similar al año anterior, pero el segundo período presenta una anomalía: todos los registros se agrupan en el nivel superior (100%). En 2022, ambos períodos muestran una distribución más equilibrada y finalmente, en 2023, el primer período presenta el porcentaje más alto de estudiantes en nivel deficiente (9.3%), mientras que el segundo período muestra una mejora (8.5%) y un aumento en el nivel superior (27.2%), lo que indica una recuperación en el rendimiento hacia el cierre del año.
+                    </P>
+                    </div>
+                    """, unsafe_allow_html=True)   
+    
+    st.markdown("""
+                                    """, unsafe_allow_html=True) 
+ 
 #------------------------------------------------------------------------------------------------------------------------------------------------------------------------    
 
 #------------------------------------------------------------------------------------------------------------------------------------------------------------------------
@@ -1531,17 +1535,23 @@ def page_model():
                     <div style='height:64px;'></div>
                 """, unsafe_allow_html=True)
     
-        #Contenido 
-    #st.markdown("""
-    #            <div style='padding:8px 0; margin-bottom:8px;'>
-    #                <h1 style='color:#333333; font-size:24px; font-family: Tahoma, "Tahoma", Geneva, sans-serif; text-align:justify; text-justify:inter-word; line-height:1.6; margin:0;'> GENERAL </h1>
-    #                <p style='color:#333333; font-size:18px; font-family: Tahoma, "Tahoma", Geneva, sans-serif; text-align:justify; text-justify:inter-word; line-height:1.6; margin:0;'>
-    #                A continuación, puedes seleccionar un conjunto de variables para construir un modelo de regresión logística, por defecto se seleccionara la media del area, perimetro, concavidad y radio pero puedes eliminarlas o seleccionar mas variables. Una vez entrenado, podrás realizar predicciones de diagnóstico sobre nuevos datos ingresados manualmente.
-    #                </p>
-    #            </div>
-    #            """, unsafe_allow_html=True)
-
+    #Contenido 
+    st.markdown("""
+                <div style='padding:8px 0; margin-bottom:8px;'>
+                    <p style='color:#333333; font-size:18px; font-family: Tahoma, "Tahoma", Geneva, sans-serif; text-align:justify; text-justify:inter-word; line-height:1.6; margin:0;'>
+                    Este módulo implementa un modelo predictivo desarrollado mediante el algoritmo <strong>XGBoost (Extreme Gradient Boosting)</strong>, reconocido por su alta eficiencia en tareas de clasificación supervisada y su capacidad para manejar grandes volúmenes de datos.  
+                    El modelo fue entrenado con una base de datos que reúne más de <strong>470.000 observaciones</strong> de estudiantes de programas universitarios presenciales, integrando tanto variables <strong>numéricas</strong> (notas parciales) como <strong>categóricas</strong> (programa académico y asignatura).  
+                    <br><br>
+                    Para optimizar su desempeño se aplicó un proceso de <strong>búsqueda en malla (GridSearchCV)</strong> y <strong>validación cruzada de dos particiones (2-Fold CV)</strong>, evaluando 16 combinaciones de hiperparámetros.  
+                    Como resultado, el modelo alcanzó una <strong>exactitud global del 93%</strong> y un <strong>índice Kappa ponderado de 0.90</strong>, evidenciando una alta concordancia entre las categorías reales y las predicciones estimadas.  
+                    </p>
+                    </div>
+                """, unsafe_allow_html=True)
     
+    st.markdown("""
+---
+                """, unsafe_allow_html=True)    
+   
     # ============================================
     # 0) Parche de compatibilidad sklearn (monkey-patch)
     #    Para modelos serializados con otra versión
@@ -1653,7 +1663,7 @@ def page_model():
     # Carga automática al iniciar
     try:
         model, classes, vars_num, vars_cat, meta = load_artifacts_auto()
-        st.success(f"Modelo cargado automáticamente desde **{meta['path']}** usando **{meta['loader']}**.")
+        #st.success(f"Modelo cargado automáticamente desde **{meta['path']}** usando **{meta['loader']}**.")
         #cols_txt = ", ".join(meta["expected_cols"])
         #t.caption(f"Target: **{meta['target']}** • Columnas esperadas: {cols_txt}")
         if meta.get("env"):
@@ -1666,16 +1676,43 @@ def page_model():
 
     # ---------- Predicción manual ----------
     with tabs[0]:
-        #st.subheader("Ingresar una observación")
+        #st.subheader("Permite seleccionar el programa académico y la asignatura, e ingresar las cuatro calificaciones principales del estudiante.") 
+        st.subheader("Ingresar datos del estudiante para predicción individual")
         col1, col2 = st.columns(2)
+        
+        # ---------- Carga y preparación (una sola vez) ----------
+        @st.cache_data
+        def cargar_mapa_programa_asignatura(ruta_txt: str):
+            # El archivo viene con columnas: Programa, Asignatura (separadas por tabulador)
+            df = pd.read_csv(ruta_txt, sep="\t", dtype=str, engine="python")
+
+            # Limpiezas básicas
+            df["Programa"] = df["Programa"].str.strip()
+            df["Asignatura"] = df["Asignatura"].str.strip()
+            df = df.dropna(subset=["Programa", "Asignatura"])
+            df = df[df["Asignatura"].str.len() > 0]
+
+            # Construir dict: {programa: [asignaturas únicas ordenadas]}
+            mapa = (
+                df.groupby("Programa")["Asignatura"]
+                .apply(lambda s: sorted(set(s)))
+                .to_dict()
+            )
+            programas = sorted(mapa.keys())
+            return programas, mapa
+
+        programas, mapa_prog_asig = cargar_mapa_programa_asignatura("Lista Programa Asignatura.txt")
+        
         with col1:
-            programa  = st.text_input("Programa", value="Ingeniería")
-            nota1     = st.number_input("Nota 1", value=3.5, step=0.1, format="%.2f")
-            nota3     = st.number_input("Nota 3", value=3.8, step=0.1, format="%.2f")
+            programa = st.selectbox("Programa", options=programas)
+            nota1 = st.number_input("Nota 1", value=3.5, step=0.1, format="%.2f")
+            nota3 = st.number_input("Nota 3", value=3.8, step=0.1, format="%.2f")
+
         with col2:
-            asignatura = st.text_input("Asignatura", value="Matemáticas")
-            nota2      = st.number_input("Nota 2", value=4.0, step=0.1, format="%.2f")
-            nota4      = st.number_input("Nota 4", value=4.2, step=0.1, format="%.2f")
+            asignaturas_disp = mapa_prog_asig.get(programa, [])
+            asignatura = st.selectbox("Asignatura", options=asignaturas_disp)
+            nota2 = st.number_input("Nota 2", value=4.0, step=0.1, format="%.2f")
+            nota4 = st.number_input("Nota 4", value=4.2, step=0.1, format="%.2f")
 
         if st.button("Predecir Rendimiento"):
             try:
@@ -1757,25 +1794,76 @@ def page_model():
             except Exception as e:
                 st.error(f"Error procesando el CSV: {e}")
 
+    st.markdown("""
+                <div style='padding:8px 0; margin-bottom:8px;'>
+                    <p style='color:#333333; font-size:18px; font-family: Tahoma, "Tahoma", Geneva, sans-serif; text-align:justify; text-justify:inter-word; line-height:1.6; margin:0;'>
+                    El modelo predice la categoría de rendimiento esperada —desde Deficiente hasta Superior— utilizando los patrones de aprendizaje adquiridos durante su fase de entrenamiento con XGBoost.
+                    A partir de las notas ingresadas y las variables contextuales (como el programa académico y la asignatura), el modelo evalúa la probabilidad de pertenencia a cada nivel de desempeño y selecciona la categoría más probable, reflejando la estructura ordinal y continua del rendimiento estudiantil
+                    </p>
+                    </div>
+                """, unsafe_allow_html=True)
+
 
 
     
 
 
 def page_conclusions():
-        st.markdown("""
-                    <div style='padding:8px 0; margin-bottom:8px;'>
-                        <h1 style='color:#111111; font-weight:700; font-size:32px; margin:0 0 6px 0;'>CONCLUSIONES</h1>
-                        <p style='color:#333333; font-size:16px; margin:0;'>Resumen de hallazgos clave, limitaciones y recomendaciones.</p>
+    # Título 
+    st.markdown("""
+                    <div style='position:fixed; top:40px; left:400px; right:24px; background:#ffffff; padding:10px 16px; z-index:9999; border-bottom:1px solid rgba(0,0,0,0.06);'>
+                    <h1 style='color:#111111; font-weight:700; font-size:45px; margin:0;'>CONCLUSIONES</h1>
+                </div>
+                    <div style='height:64px;'></div>
+                """, unsafe_allow_html=True)
+    #Contenido
+    
+    st.markdown("""
+                    <div>
+                    <p style='color:#444444; text-align:justify; font-size:20px; margin:0 0 12px 0;'> 
+                    Este documento presenta un Análisis Exploratorio de los Datos (-EDA-) sobre el Rendimiento (académico) de estudiantes de una Institución de Educación Superior en Colombia y sus principales factores asociados, a partir del conjunto de datos denominado “Student Academic Record (SAR)”, compuesto por 590.412 observaciones y 16 variables (sin valores faltantes). Las variables se agrupan en cuatro categorías principales: Información Académica, Récord de Notas, Desempeño estudiantil y temporalidad, siendo la variable de interés el Rendimiento Académico (categórica ordinal).
+                    <br><br>    
+                    Los resultados preliminares evidencian que las Notas 1 y 2 presentan bajos promedios y alta dispersión; la Nota 3 concentra calificaciones altas y muestra la mayor correlación con la Nota Final (𝜌 = 0.5630); la Nota 4 se caracteriza por ausencia de registros significativos; mientras que la Nota Definitiva y la Nota Final reflejan una fuerte concentración en calificaciones altas y una asociación casi perfecta (𝜌 = 0.9890). La Nota de Habilitación, en contraste, es poco frecuente y se relaciona negativamente con la Nota Final.
+                    <br><br>
+                    Finalmente, los análisis de asociación mediante Chi-cuadrado revelaron dependencias significativas entre el Rendimiento (académico) y variables como el Programa y, en mayor medida, las Asignaturas, lo que sugiere, en principio, que el tipo de materia/curso es el factor más influyente en el desempeño estudiantil.
+                    <Br><br>
+                    La etapa de entrenamiento del modelo, basada en el algoritmo XGBoost, permitió optimizar el desempeño predictivo a partir de más de 470.000 registros de estudiantes universitarios.
+                    El procedimiento de GridSearchCV y la validación cruzada aseguraron una selección rigurosa de hiperparámetros, alcanzando métricas sólidas (Accuracy = 0.93, Weighted Kappa = 0.90) que garantizan la estabilidad y fiabilidad del modelo.
+                    <br><br>
+                    En la fase de predicción, el sistema demostró una adecuada capacidad de generalización, reflejando resultados consistentes tanto a nivel individual como masivo (por CSV).
+                    Las curvas de aprendizaje confirmaron que el modelo se encuentra en una zona de saturación óptima, sin indicios de sobreajuste o subentrenamiento.
+                    <br><br>
+                    En conclusión, el modelo XGBoost implementado representa una herramienta predictiva robusta y explicativa, capaz de anticipar el rendimiento académico con alta precisión y ofrecer información útil para la toma de decisiones estratégicas en la gestión educativa, promoviendo procesos de mejora continua sustentados en analítica de datos
+                    </P>
                     </div>
                     """, unsafe_allow_html=True)
 
 
 def page_refs():
-        st.markdown("""
-                    <div style='padding:8px 0; margin-bottom:8px;'>
-                        <h1 style='color:#111111; font-weight:700; font-size:32px; margin:0 0 6px 0;'>REFERENCIAS</h1>
-                        <p style='color:#333333; font-size:16px; margin:0;'>Enlaces, datasets y bibliografía utilizada en el análisis.</p>
+    # Título 
+    st.markdown("""
+                    <div style='position:fixed; top:40px; left:400px; right:24px; background:#ffffff; padding:10px 16px; z-index:9999; border-bottom:1px solid rgba(0,0,0,0.06);'>
+                    <h1 style='color:#111111; font-weight:700; font-size:45px; margin:0;'>REFERENCIAS BIBLIOGRAFICAS</h1>
+                </div>
+                    <div style='height:64px;'></div>
+                """, unsafe_allow_html=True)
+    #Contenido
+    
+    st.markdown("""
+                    <div>
+                    <p style='color:#444444; text-align:justify; font-size:20px; margin:0 0 12px 0;'> 
+                    <strong>Alyahyan, E., & Düştegör, D. (2020).</strong> Predicting academic success in higher education: literature review and best practices. International Journal of Educational Technology in Higher Education, 17(1), 3.
+                    <br><br>
+                    <strong>Gallego, M. G., Perez de los Cobos, A. P., & Gallego, J. C. G. (2021).</strong> Identifying students at risk to academic dropout in higher education. Education Sciences, 11*(8), 427.
+                    <br><br>
+                    <strong>Laboratorio de Economía de la Educación (LEE) de la Pontificia Universidad Javeriana. (2023).</strong> Informe No. 74 Deserción en la educación superior en Colombia. Disponible en: [https://educacion.javeriana.edu.co/lee/](https://educacion.javeriana.edu.co/lee/)
+                    <br><br>    
+                    <strong>Pérez, B., Castellanos, C., & Correal, D. (2018, May).</strong> Predicting student drop-out rates using data mining techniques: A case study. In IEEE Colombian Conference on Applications in Computational Intelligence* (pp. 111–125). Cham: Springer International Publishing.
+                    <br><br>
+                    <strong>Realinho, V., Machado, J., Baptista, L., & Martins, M. V. (2022).</strong> Predicting student dropout and academic success. Data, 7(11), 146.
+                    <br><br>
+                    <strong>Valencia-Arias, A., Chalela, S., Cadavid-Orrego, M., Gallegos, A., Benjumea-Arias, M., & Rodríguez-Salazar, D. Y. (2023).</strong> University dropout model for developing countries: A Colombian context approach. *Behavioral Sciences, 13*(5), 382.
+                    </P>
                     </div>
                     """, unsafe_allow_html=True)
 
@@ -1784,7 +1872,7 @@ ROUTES = {
     "Introducción": page_intro,
     "Objetivos": page_objectives,
     "Exploración de Datos (EDA)": page_eda,
-    "Modelo": page_model,
+    "Modelo Predicción": page_model,
     "Conclusiones": page_conclusions,
     "Referencias": page_refs,
 }
