@@ -20,7 +20,9 @@ from pathlib import Path
 import requests 
 from scipy.stats import kstest, pearsonr, chi2_contingency, norm   
 import pickle
-import traceback    
+import traceback 
+import plotly.graph_objects as go 
+from PIL import Image  
 
 
 st.set_page_config(page_title="Modelado del Rendimiento Académicos de Estudiantes Universitarios de Programas de Pregrado Presencial con el algoritmo XGBoost",
@@ -43,8 +45,8 @@ with st.sidebar:
     # Navigation menu
     choice = option_menu(
         "Capítulos",
-        ["Introducción", "Objetivos", "Exploración de Datos (EDA)","Modelo Predicción", "Conclusiones", "Referencias"],
-        icons=["book", "bullseye", "bar-chart","collection-play", "pencil", "bookmarks"],
+        ["Exploración de Datos (EDA)","Modelo Predicción"],
+        icons=["book", "bar-chart","collection-play"],
         menu_icon="cast",
         default_index=0,
 
@@ -66,96 +68,23 @@ with st.sidebar:
 
 # Define page functions
 
-def page_intro():
-    
-    # Título Introducción 
+def page_eda():
     st.markdown("""
-                    <div style='position:fixed; top:40px; left:400px; right:24px; background:#ffffff; padding:10px 16px; z-index:9999; border-bottom:1px solid rgba(0,0,0,0.06);'>
-                    <h1 style='color:#111111; font-weight:700; font-size:50px; margin:0;'> INTRODUCCIÓN</h1>
+                <div style='position:fixed; top:40px; left:400px; right:24px; background:#ffffff; padding:10px 16px; z-index:9999; border-bottom:1px solid rgba(0,0,0,0.06);'>
+                    <h1 style='color:#111111; font-weight:700; font-size:50px; margin:0;'>🔍 EXPLORACIÓN DE LOS DATOS (EDA)</h1>
                 </div>
-                    <div style='height:64px;'></div>
                 """, unsafe_allow_html=True)
     
-    #Contenido Introducción
+    #Contenido Contexto
     st.markdown("""
                 <div style='padding:8px 0; margin-bottom:8px;'>
+                    <h1 style='color:#111111; font-weight:600; font-size:30px; margin:18px 0 6px 0;'>🧭 CONTEXTO</h1>
                     <p style='color:#333333; font-size:18px; font-family: Tahoma, "Tahoma", Geneva, sans-serif; text-align:justify; text-justify:inter-word; line-height:1.6; margin:0;'>
-                    <br>
-                    La deserción estudiantil y el bajo rendimiento académico constituyen problemáticas centrales en las instituciones de educación superior, debido a sus efectos sobre la calidad educativa, la reputación institucional y la sostenibilidad del sistema (Gallego et al., 2021). En Colombia, las tasas de deserción universitaria superan el promedio de los países de la OCDE, reflejando debilidades estructurales relacionadas con factores económicos, sociales, institucionales y pedagógicos (Ministerio de Educación Nacional – SPADIES, 2025). Entre las causas más relevantes de deserción se encuentra el bajo rendimiento académico, indicador que refleja la capacidad del estudiante para alcanzar los objetivos de aprendizaje y adaptarse a las exigencias del entorno educativo (Imig, 2020). 
-                    <br>
-                    <br>
-                    Tradicionalmente, el rendimiento académico se ha evaluado mediante indicadores descriptivos como el promedio general acumulado (GPA). Sin embargo, la creciente disponibilidad de datos educativos y los avances en la ciencia de datos han impulsado la emergencia de la Minería de Datos Educativos (MDE). Este campo utiliza modelos predictivos avanzados para comprender y anticipar fenómenos clave como el rendimiento, la retención, la satisfacción y la deserción Alyahyan & Düştegör, 2020). En Colombia, esta necesidad se articula con iniciativas como el Sistema de Prevención y Análisis de la Deserción en Instituciones de Educación Superior (SPADIES), que facilita el monitoreo y el diseño de acciones diferenciadas (Pérez et al., 2018). Estas herramientas se enmarcan en la metodología KDD (Knowledge Discovery in Databases), que integra la recolección, transformación y análisis de datos para generar conocimiento útil en la toma de decisiones educativas (Rico Páez & Sánchez Guzmán, 2018).
-                    <br>
-                    <br>
-                    Algoritmos como XGBoost (Extreme Gradient Boosting) se destacan en esta área, demostrando ser altamente eficaces para manejar grandes volúmenes de datos, capturar relaciones no lineales y realizar predicciones precisas en tareas de clasificación y regresión, lo que resulta fundamental para evaluar la importancia relativa de las variables académicas en el desempeño estudiantil.
-                    <br>
-                    <br>
                     El presente proyecto tiene como objetivo analizar, modelar y predecir el rendimiento académico de los estudiantes —considerado un indicador indirecto de deserción— a partir de variables académicas y de desempeño, mediante técnicas estadísticas descriptivas, inferenciales y de aprendizaje automático. Con datos públicos de una universidad colombiana (2014–2023), que incluyen calificaciones y variables de contexto académico, se busca identificar los factores más influyentes sobre la nota final y estimar la probabilidad de bajo rendimiento. Los resultados aspiran a fortalecer la detección temprana de estudiantes en riesgo y apoyar la toma de decisiones institucionales orientadas a mejorar la calidad y la permanencia en la educación superior.
                     </p>
                 </div>
                 """, unsafe_allow_html=True)
-
-
-def page_objectives():
-    # Título 
-    st.markdown("""
-                    <div style='position:fixed; top:40px; left:400px; right:24px; background:#ffffff; padding:10px 16px; z-index:9999; border-bottom:1px solid rgba(0,0,0,0.06);'>
-                    <h1 style='color:#111111; font-weight:700; font-size:50px; margin:0;'>OBJETIVOS</h1>
-                </div>
-                    <div style='height:64px;'></div>
-                """, unsafe_allow_html=True)
-    
-        #Contenido 
-    st.markdown("""
-                <div style='padding:8px 0; margin-bottom:8px;'>
-                    <h1 style='color:#333333; font-size:24px; font-family: Tahoma, "Tahoma", Geneva, sans-serif; text-align:justify; text-justify:inter-word; line-height:1.6; margin:0;'> GENERAL </h1>
-                    <p style='color:#333333; font-size:18px; font-family: Tahoma, "Tahoma", Geneva, sans-serif; text-align:justify; text-justify:inter-word; line-height:1.6; margin:0;'>
-                     Analizar, modelar y predecir el rendimiento académico de los estudiantes a partir de variables académicas y de desempeño, mediante técnicas estadísticas descriptivas, inferenciales y de aprendizaje automático basadas en el algoritmo XGBoost, con el propósito de identificar patrones, relaciones significativas y factores determinantes que inciden en la nota final y en los niveles de rendimiento académico.
-                    </p>
-                </div>
-                """, unsafe_allow_html=True)
-    
-    st.markdown("""
-                <div style='padding:8px 0; margin-bottom:8px;'>
-                    <h1 style='color:#333333; font-size:24px; font-family: Tahoma, "Tahoma", Geneva, sans-serif; text-align:justify; text-justify:inter-word; line-height:1.6; margin:0;'> ESPECIFICOS </h1>
-                    <p style='color:#333333; font-size:18px; font-family: Tahoma, "Tahoma", Geneva, sans-serif; text-align:justify; text-justify:inter-word; line-height:1.6; margin:0;'>
-                     - Identificar la estructura y características del conjunto de datos, resaltando sus dimensiones, tipos de varibles (𝑋𝑖: cuantitativas y cualitativas) y variable de interés (𝑌: dependiente). 
-                    <br><br>
-                    </p>
-                    <p style='color:#333333; font-size:18px; font-family: Tahoma, "Tahoma", Geneva, sans-serif; text-align:justify; text-justify:inter-word; line-height:1.6; margin:0;'>
-                     - Realizar un análisis exploratorio en función de la variable dependiente (𝑌), caracterizando su distribución y evaluando patrones, tendencias y posibles sesgos en los datos.
-                    <br><br>
-                    </p>
-                    <p style='color:#333333; font-size:18px; font-family: Tahoma, "Tahoma", Geneva, sans-serif; text-align:justify; text-justify:inter-word; line-height:1.6; margin:0;'>
-                     - Llevar a cabo un análisis estadístico de las variables numéricas con el fin de: verificar la normalidad de las distribuciones (Ho : Xi ∼ N(μ,σ2)), estimar correlaciones significativas entre variables cuantitativas (rPearson) y analizar asociaciones entre variables categóricas mediante pruebas de independencia (𝜒2).
-                    <br><br>
-                    </p>
-                    <p style='color:#333333; font-size:18px; font-family: Tahoma, "Tahoma", Geneva, sans-serif; text-align:justify; text-justify:inter-word; line-height:1.6; margin:0;'>
-                     - Desarrollar y evaluar un modelo de clasificación ordinal utilizando el algoritmo XGBoost, con el propósito de predecir la variable “Rendimiento” e identificar las variables predictoras con mayor peso estadístico en la explicación del desempeño académico de los estudiantes.
-                    </p>
-                </div>
-                """, unsafe_allow_html=True)
-    
-    
-
-def page_eda():
-    st.markdown("""
-                <div style='position:fixed; top:40px; left:400px; right:24px; background:#ffffff; padding:10px 16px; z-index:9999; border-bottom:1px solid rgba(0,0,0,0.06);'>
-                    <h1 style='color:#111111; font-weight:700; font-size:50px; margin:0;'>EXPLORACIÓN DE LOS DATOS (EDA)</h1>
-                </div>
-                """, unsafe_allow_html=True)
-    st.markdown("""
-               
-                """, unsafe_allow_html=True)
-    st.markdown("""
-                <div
-                    <br><br>
-                    <h1 style='color:#111111; font-weight:600; font-size:30px; margin:18px 0 6px 0;'>1. TRANSFORMACIÓN DE DATOS</h1>
-                    <p style='color:#444444; text-align:justify; font-size:20px; margin:0 0 12px 0;'>Antes de realizar el Análisis Exploratorio de los Datos, es necesario preparar y transformar la información en diferentes formatos que faciliten su comprensión y procesamiento. Para ello, se emplean diversos paquetes y librerías que proporcionan funciones diseñadas para organizar, limpiar y estructurar los datos de manera eficiente.
-                     A continuación, se presentan las principales características del DataFrame y se ejecutarán las transformaciones necesarias para dar inicio al análisis detallado de la información.</p>
-                </div>
-                """, unsafe_allow_html=True)
-    
+       
     # ---------- Cargue cache y Parquet ----------
 
     @st.cache_data(ttl=60*60, show_spinner=False)
@@ -245,18 +174,74 @@ def page_eda():
  # INICIA EDA
 #------------------------------------------------------------------------------------------------------------------------------------------------------------------------
 
+    st.markdown("""
+               
+                """, unsafe_allow_html=True)
 
-    st.markdown("### 📋 Información de la Estructura del DataFrame")
+    st.markdown("### 📋 INFORMACIÓN DATAFRAME")
 
     # Mostrar métricas rápidas: filas, columnas y elementos
     if df is not None:
         c1, c2, c3 = st.columns(3)
-        c1.metric("Registros", f"{df.shape[0]:,}")
+        c1.metric("Registros Iniciales", f"{df.shape[0]:,}")
         c2.metric("Variables", f"{df.shape[1]:,}")
         c3.metric("Observaciones", f"{df.size:,}")
+    
+        # -------- Eliminar duplicados y mostrar métricas --------
+
+        #initial_count = int(df.shape[0])
+        dup_count = int(df.duplicated().sum())
+        
+        # eliminar duplicados si existen
+        if dup_count > 0:
+            df = df.drop_duplicates().reset_index(drop=True)
+        after_count = int(df.shape[0])
+        
+        # Por columna
+        missing_by_col = df.isnull().sum().sort_values(ascending=False)
+        total_missing = int(missing_by_col.sum())
+
+        d1, d2, d3 = st.columns(3)
+        d1.metric("Total faltantes", f"{total_missing:,}")
+        d2.metric("Total Duplicados", f"{dup_count:,}")
+        d3.metric("Registros Finales", f"{after_count:,}")
+
+    st.markdown("""
+                
+                """, unsafe_allow_html=True)
         
     # Construir una tabla similar a df.info() pero en formato DataFrame
     if df is not None:
+        # ----------------------------
+        # 1️⃣ Tu tabla de variables base
+        # ----------------------------
+        var_types = [ 
+            ("Información Académica", "Facultad", "Categórica / Nominal", "590412", "0"),
+            ("Información Académica", "Programa", "Categórica / Nominal", "590412", "0"),
+            ("Información Académica", "Código Asignatura", "Categórica / Nominal", "590412", "0"),
+            ("Información Académica", "Asignatura", "Categórica / Nominal", "590412", "0"),
+            ("Información Académica", "Grupo", "Categórica / Nominal", "590412", "0"),
+            ("Información Académica", "Código Estudiantil", "Numérica / Discreta",  "590412", "0"),
+            ("Record de Notas", "Nota 1", "Numérica / Continua", "590412", "0"),
+            ("Record de Notas", "Nota 2", "Numérica / Continua", "590412", "0"),
+            ("Record de Notas", "Nota 3", "Numérica / Continua", "590412", "0"),
+            ("Record de Notas", "Nota 4", "Numérica / Continua", "590412", "0"),
+            ("Record de Notas", "Nota Definitiva", "Numérica / Continua", "590412", "0"),
+            ("Record de Notas", "Nota Habilitación", "Numérica / Continua", "590412", "0"),
+            ("Record de Notas", "Nota Final", "Numérica / Continua", "590412", "0"),
+            ("Desempeño Estudiantil", "Rendimiento", "Categórica / Ordinal", "590412", "0"),
+            ("Datos Temporales", "Año", "Numérica / Discreta", "590412", "0"),
+            ("Datos Temporales", "Periodo", "Numérica / Discreta", "590412", "0")
+        ]
+
+        # Convertimos a DataFrame para hacer merge
+        var_df = pd.DataFrame(var_types, columns=[
+            "Clase de Atributo", "Variable", "Tipo de Variable", "Total Registros", "Registros Nulos (Ref)"
+        ])
+        
+        # ----------------------------
+        # 2️⃣ Construcción de df_info base
+        # ----------------------------
         non_null = df.notnull().sum()
         nulls = df.isnull().sum()
         dtypes = df.dtypes.astype(str)
@@ -267,6 +252,27 @@ def page_eda():
             'Registros Nulos': nulls.values,
             '% No Nulos': ((non_null / len(df)) * 100).round(0).values
         })
+        
+        # Merge con tus clasificaciones
+        df_info = df_info.merge(var_df, on="Variable", how="left")
+
+        # justo antes de reordenar columnas
+        if 'Tipo' in df_info.columns and 'Tipo (Pandas)' not in df_info.columns:
+            df_info = df_info.rename(columns={'Tipo': 'Tipo (Pandas)'})
+
+        orden = [
+            "Variable", "Clase de Atributo", "Tipo de Variable", 
+            "Tipo (Pandas)", "Cantidad Registros", "Registros Nulos", "% No Nulos",
+            "Total Registros", "Registros Nulos (Ref)"
+        ]
+        # reordenar solo con columnas que existan (evita KeyError)
+        df_info = df_info.reindex(columns=[c for c in orden if c in df_info.columns])
+
+        # Reordenar columnas
+        df_info = df_info[[
+            "Variable", "Clase de Atributo", "Tipo de Variable", 
+            "Tipo (Pandas)", "Cantidad Registros", "Registros Nulos"
+        ]]        
 
         # Mostrar tabla estilizada
         styled = df_info.style.set_table_styles([
@@ -275,57 +281,7 @@ def page_eda():
         ]).format({"Porc No Nulos": "{:.2f}%"})
 
         st.dataframe(styled, use_container_width=True)
-        
-        st.markdown("""
-                <div
-                    <p style='color:#444444; text-align:justify; font-size:20px; margin:0 0 12px 0;'>
-                    El conjunto de datos está conformado por 590.415 registros y 16 variables, todas relacionadas con el rendimiento académico de los estudiantes. Las variables incluyen información institucional (Facultad, Programa), académica (Asignatura, Grupo) y de desempeño (Notas 1 a 4).
-                    <br>
-                    Cabe resaltar que no se registran valores nulos, lo que garantiza la integridad y consistencia de la información disponible.
-                    A continuación, se procederá a verificar la existencia de datos duplicados y posibles valores faltantes, con el fin de garantizar la calidad e integridad del conjunto de datos antes de avanzar en el Análisis Exploratorio de Datos (EDA).
-                    </p>
-                </div>
-                """, unsafe_allow_html=True)
-        
-        st.markdown("""
-                    
-                    """)
-                     
-        # -------- Resumen de valores faltantes --------
-        st.markdown("### 🔎 Resumen de valores duplicados y faltantes")
-
-        # -------- Eliminar duplicados y mostrar métricas --------
-
-        initial_count = int(df.shape[0])
-        dup_count = int(df.duplicated().sum())
-        
-        # eliminar duplicados si existen
-        if dup_count > 0:
-            df = df.drop_duplicates().reset_index(drop=True)
-        after_count = int(df.shape[0])
-
-        d1, d2, d3 = st.columns(3)
-        d1.metric("Registros iniciales", f"{initial_count:,}")
-        d2.metric("Duplicados encontrados", f"{dup_count:,}")
-        d3.metric("Registros Sin Duplicados", f"{after_count:,}")
-
-        # Por columna
-        missing_by_col = df.isnull().sum().sort_values(ascending=False)
-
-        # Totales y por fila
-        total_missing = int(missing_by_col.sum())
-        rows_with_missing = int(df.isnull().any(axis=1).sum())
-        rows_without_missing = int(df.shape[0] - rows_with_missing)
-
-        m1, m2, m3 = st.columns(3)
-        m1.metric("Total faltantes", f"{total_missing:,}")
-        m2.metric("Filas con faltante", f"{rows_with_missing:,}")
-        m3.metric("Filas sin faltantes", f"{rows_without_missing:,}")
-
-        # Mostrar faltantes por Variable (tabla)
-        st.markdown("**Faltantes por Variable**")
-        st.dataframe(missing_by_col.to_frame(name='Registros Nulos'), use_container_width=True)
-
+                        
         st.markdown("""
                     
                     """)
@@ -333,9 +289,7 @@ def page_eda():
         st.markdown("""
                 <div
                     <p style='color:#444444; text-align:justify; font-size:20px; margin:0 0 12px 0;'>
-                    Tras la eliminación de las filas duplicadas y la verificación de la ausencia de datos faltantes en el conjunto de datos, el proceso de análisis se ve considerablemente simplificado, ya que no es necesario aplicar técnicas de imputación. A continuación, se presenta la descripción detallada de las variables que conforman el dataset, distinguiendo entre atributos categóricos —tanto nominales como ordinales— y variables numéricas, las cuales pueden ser continuas o discretas según su naturaleza.
-                    </p>
-                </div>
+                    Tras la eliminación de las filas duplicadas y la verificación de la ausencia de datos faltantes en el conjunto de datos, el proceso de análisis se ve considerablemente simplificado, ya que no es necesario aplicar técnicas de imputación.
                 """, unsafe_allow_html=True)
 
     st.markdown("""
@@ -345,235 +299,99 @@ def page_eda():
 #------------------------------------------------------------------------------------------------------------------------------------------------------------------------    
 
 #------------------------------------------------------------------------------------------------------------------------------------------------------------------------
+
     st.markdown("""
                 <div
-                    <h1 style='color:#111111; font-weight:600; font-size:30px; margin:18px 0 6px 0;'>2. ESTRUCTURA Y CARACTERISTICAS DE LA BASE DE DATOS</h1>
+                    <h2 style='color:#111111; font-weight:600; font-size:30px; margin:18px 0 6px 0;'>📝 RECORD DE NOTAS</h2>
                     <br>
-                    <p style='color:#444444; text-align:justify; font-size:20px; margin:0 0 12px 0;'> 
-                     La siguiente tabla, detalla la Estructura y Características de la base de datos "Student Academic Record". Su configuración incluye cinco columnas: "Clase de Atributo", que agrupa las variables según su naturaleza; "Atributo", que indica el nombre de cada variable registrada en la base; "Tipo", que define la naturaleza de los datos como "categóricos" o "numéricos", y dentro de ellos, "nominales", "ordinales", "continuos" o "discretos"; "Count", que presenta el número total de registros (observaciones), en este caso 590.412 para todas las variables; y Missing (value), que señala la ausencia de valores faltantes, siendo 0 en todos los casos (tanto para las filas como para las columnas).
-                     </p>
                 </div>
                 """, unsafe_allow_html=True)
-
+    
     st.markdown("""
                
-                """, unsafe_allow_html=True)
-    
-    var_types = [
-                ("Información Académica", "Facultad", "Categórica / Nominal", "590412", "0"),
-                ("Información Académica", "Programa Académico", "Categórica / Nominal", "590412", "0"),
-                ("Información Académica", "Código Asignatura", "Categórica / Nominal", "590412", "0"),
-                ("Información Académica", "Asignatura / Materia", "Categórica / Nominal", "590412", "0"),
-                ("Información Académica", "Grupo", "Categórica / Nominal", "590412", "0"),
-                ("Información Académica", "Código Estudiantil", "Numérica / Discreta",  "590412", "0"),
-                ("Record de Notas", "Nota 1", "Numérica / Continua", "590412", "0"),
-                ("Record de Notas", "Nota 2", "Numérica / Continua", "590412", "0"),
-                ("Record de Notas", "Nota 3", "Numérica / Continua", "590412", "0"),
-                ("Record de Notas", "Nota 4", "Numérica / Continua", "590412", "0"),
-                ("Record de Notas", "Nota Definitiva", "Numérica / Continua", "590412", "0"),
-                ("Record de Notas", "Nota Habilitación", "Numérica / Continua", "590412", "0"),
-                ("Record de Notas", "Nota Final", "Numérica / Continua", "590412", "0"),
-                ("Desempeño Estudiantil", "Rendimiento", "Categórica / Ordinal", "590412", "0"),
-                ("Datos Temporales", "Año", "Numérica / Discreta", "590412", "0"),
-                ("Datos Temporales", "Periodo", "Numérica / Discreta", "590412", "0")
-            ]
-
-            # Crear DataFrame
-    tabla_vars = pd.DataFrame(
-                var_types,
-                columns=["Clase de Atributo", "Atributo", "Tipo", "Count", "Missing"]
-            )
-
-            # Mostrar con estilo
-    tabla_vars = (
-        tabla_vars.style
-            .set_table_attributes('style="width:100%; margin-left:auto; margin-right:auto;"')
-            .set_properties(**{'text-align': 'left'})
-            .set_table_styles([{'selector': 'th', 'props': [('text-align', 'center')]}])
-            .hide(axis="index")
-        )
-    # Mostrar la tabla en Streamlit (st.write/st.dataframe requiere llamada explícita)
-    st.dataframe(tabla_vars, use_container_width=True)
-    st.markdown("""
-                
-                    """, unsafe_allow_html=True)
-
-    st.markdown("""
-                    <div>
-                        <p style='color:#444444; text-align:justify; font-size:20px; margin:0 0 12px 0;'> 
-                        Dentro de la <strong>clase Información Académica</strong> se agrupan las variables que describen el contexto académico de cada estudiante. Estas incluyen: Facultad, Programa Académico, Código de Asignatura, Asignatura/Materia, Grupo y Código Estudiantil. Las cinco primeras corresponden a <strong>variables categóricas nominales</strong>, mientras que el Código Estudiantil se clasifica como <strong>variable discreta</strong>.
-                        <br>
-                        La <strong>clase Registro de Notas</strong> reúne las variables asociadas al desempeño académico, entre ellas las <strong>notas parciales</strong> (Nota 1, Nota 2, Nota 3 y Nota 4), la Nota Definitiva, la Nota de Habilitación y la Nota Final. Todas estas variables son de tipo <strong>numérico continuo</strong>.
-                        <br>
-                        En la <strong>clase Desempeño Estudiantil</strong> se encuentra el atributo <strong>Rendimiento</strong>, definido como una variable categórica ordinal con seis niveles: Insuficiente, Deficiente, Bajo, Medio, Alto y Superior.
-                        <br>
-                        Por último, la <strong>clase Datos Temporales</strong> contiene los atributos Año y Periodo, ambos definidos como <strong>variables numéricas discretas</strong>. En síntesis, la tabla organiza de manera estructurada la información del conjunto de datos, evidenciando que todas las variables cuentan con <strong>590.412 registros completos y sin valores faltantes</strong>, además de clasificar cada atributo según su tipo de dato y naturaleza.
-                        <br><br>
-                        Para explorar rápidamente la estructura de los datos, verificar el contenido de las variables y comprobar que la carga del conjunto de datos se haya realizado correctamente, se muestra las primeras observaciones:
-                        </p>
-                    </div>
-                    """, unsafe_allow_html=True)
-
-    st.markdown("""
-                
-                    """, unsafe_allow_html=True)
-    
-    st.dataframe(df.head(20), use_container_width=True)
-        
-    st.markdown("""
-                    
-                    """)
-
-#------------------------------------------------------------------------------------------------------------------------------------------------------------------------    
-
-#------------------------------------------------------------------------------------------------------------------------------------------------------------------------
-
-    st.markdown("""
-                <div
-                    <h1 style='color:#111111; font-weight:600; font-size:30px; margin:18px 0 6px 0;'>3. ESTADISTICAS DESCRIPTIVAS</h1>
-                    <br>
-                </div>
-                """, unsafe_allow_html=True)    
-
-    st.markdown("""
-                <div
-                    <h2 style='color:#111111; font-weight:600; font-size:30px; margin:18px 0 6px 0;'>3.1. RECORD DE NOTAS</h2>
-                    <br>
-                </div>
                 """, unsafe_allow_html=True)  
 
-    st.markdown("""
-                    <div>
-                    <p style='color:#444444; text-align:justify; font-size:20px; margin:0 0 12px 0;'> 
-                    La siguiente tabla presenta un análisis descriptivo de las variables relacionadas con las calificaciones dentro de la base "Student Academic Record". Cada fila representa una de las notas evaluadas, mientras que las columnas ofrecen estadísticas descriptivas clave: número de observaciones, media, desviación estándar, valores mínimos y máximos, percentiles (25%, 50% y 75%), mediana, asimetría (skewness) y curtosis (kurtosis). Todas las variables cuentan con 590.412 registros, lo que evidencia que no hay valores perdidos en estas mediciones.
-                    </p>
-                    </div>
-                    """, unsafe_allow_html=True)    
     
-    # Tabla de Record de Notas (mostrar en Streamlit)
-    # Variables que se excluyen
-    excluir = ["Código Estudiantil", "Año", "Periodo", "Código Asignatura"]
+    # 1️⃣ Detectar columnas tipo "Nota"
+    record_cols = [c for c in df.columns if c.strip().lower().startswith("nota")]
 
-    # Se crea un nuevo DataFrame sin esas variables
-    df1 = df.drop(columns=excluir, errors="ignore")
+    if not record_cols:
+        st.warning("No se encontraron columnas de record de notas (p. ej., 'Nota 1', 'Nota Final').")
+        st.stop()
 
-    # Resumen para variables numéricas
-    resumen_numerico = df1.describe().T  # Transpuesto para mayor legibilidad
-    resumen_numerico["median"] = df1.median(numeric_only=True)
-    resumen_numerico["skewness"] = df1.skew(numeric_only=True)
-    resumen_numerico["kurtosis"] = df1.kurtosis(numeric_only=True)
+    # 2️⃣ Selector de variables
+    sel_cols = st.multiselect(
+        "Selecciona las variables de notas a comparar:",
+        options=record_cols,
+        default=[c for c in record_cols if any(x in c for x in ["Final", "Definitiva"])] or record_cols[:2],
+        help="Puedes escoger varias variables de notas para comparar su distribución."
+    )
 
-    # Preparar DataFrame para visualización
-    resumen_numerico = resumen_numerico.reset_index().rename(columns={"index": "Variable"})
+    if not sel_cols:
+        st.info("Selecciona al menos una variable para continuar.")
+        st.stop()
 
-    # Formatear números: counts como enteros, el resto con 2 decimales
-    num_cols = resumen_numerico.select_dtypes(include=['number']).columns.tolist()
-    fmt = {c: "{:,.2f}" for c in num_cols}
-    # Detectar columna 'count' (case-insensitive) y usar 0 decimales
-    for c in resumen_numerico.columns:
-        if c.lower() == 'count':
-            fmt[c] = "{:,.0f}"
+    # 3️⃣ Convertir a formato largo
+    df_long = df[sel_cols].copy()
+    for c in sel_cols:
+        df_long[c] = pd.to_numeric(df_long[c], errors="coerce")
 
-    # Mostrar con estilo para mejor legibilidad
-    st.dataframe(resumen_numerico.style.format(fmt), use_container_width=True)
-    
-    st.markdown("""
-                    
-                    """)
-    
-    st.markdown("""
-                    <div>
-                    <p style='color:#444444; text-align:justify; font-size:20px; margin:0 0 12px 0;'> 
-                    En el caso de Nota 1 y Nota 2, ambas presentan promedios cercanos a 2.38 y 2.42 respectivamente, con desviaciones estándar superiores a 1.89, lo cual refleja una gran dispersión en las calificaciones. Sus medianas están alrededor de 3.0 y 3.1, con valores mínimos de 0 y máximos de 5. La asimetría es ligeramente negativa, lo que indica una ligera concentración de valores hacia la parte alta de la escala, mientras que la curtosis negativa refleja distribuciones más aplanadas en comparación con una normal.
-                    <br><br>
-                    En Nota 3, el promedio es más alto, de 3.45, con una mediana de 4 y un rango intercuartílico entre 3.1 y 4.5. La distribución tiene una asimetría negativa y una curtosis positiva, lo que sugiere un ligero sesgo hacia notas más altas y una mayor concentración alrededor de la media en comparación con las notas 1 y 2.
-                    <br><br>
-                    Por su parte, Nota 4 muestra un promedio muy bajo de 0.03, con una mediana en 0 y un rango intercuartílico también en 0, lo que refleja que en la mayoría de los registros esta nota no se presenta o su valor es nulo. Sin embargo, aparecen casos con calificaciones hasta de 5, lo cual se refleja en la desviación estándar de 0.36 y en la elevada asimetría y curtosis, que indican una distribución fuertemente concentrada en 0 pero con valores atípicos en el extremo superior.
-                    <br><br>
-                    La Nota Definitiva alcanza un promedio de 3.76, con una mediana de 4, valores mínimos en 0 y máximos en 5. Su distribución está sesgada negativamente, lo que sugiere una mayor acumulación de estudiantes con notas más altas, y con una curtosis de 4.5 que indica una concentración mayor de valores cerca de la media con colas más pesadas que una distribución normal.
-                    <br><br>
-                    En la Nota de Habilitación, el promedio es de apenas 0.06, con una mediana de 0 y valores que alcanzan como máximo 5. Esto refleja que la mayoría de los estudiantes no presentan habilitación, aunque existen registros de quienes sí la tienen. La distribución muestra alta asimetría positiva y una curtosis elevada, lo que indica que se trata de un evento poco frecuente pero con presencia de valores extremos.
-                    <br><br>
-                    Finalmente, la Nota Final presenta un promedio de 3.78 y una mediana de 4, con valores mínimos en 0 y máximos en 5. Su comportamiento es muy similar al de la Nota Definitiva, aunque con ligeras diferencias por la influencia de la habilitación. La asimetría negativa y la curtosis positiva reafirman que los resultados tienden hacia calificaciones más altas, con una mayor concentración alrededor de la media y presencia de valores extremos.
-                    </p>
-                    </div>
-                    """, unsafe_allow_html=True)
-    
-    st.markdown("""
-                    
-                    """)   
-#------------------------------------------------------------------------------------------------------------------------------------------------------------------------    
+    df_long = df_long.melt(var_name="Variable", value_name="Valor").dropna(subset=["Valor"])
+    n = len(df_long)
+    if n == 0:
+        st.warning("No hay datos numéricos válidos para las columnas seleccionadas.")
+        st.stop()
 
-#------------------------------------------------------------------------------------------------------------------------------------------------------------------------
-    st.markdown("""
-                <div
-                    <h2 style='color:#111111; font-weight:600; font-size:30px; margin:18px 0 6px 0;'>3.2. DISTRIBUCIÓN DE LOS DATOS RELATIVOS A VARIABLE NOTA FINAL</h2>
-                    <br>
-                </div>
-                """, unsafe_allow_html=True)     
-    
-    # Diagrama de Caja para Nota Final (Plotly) con media marcada
-    if 'Nota Final' in df.columns:
-        # convertir a numérico y calcular media de forma robusta
-        nota_numeric = pd.to_numeric(df['Nota Final'], errors='coerce')
-        media = nota_numeric.mean()
+    # 4️⃣ Crear boxplot
+    fig = px.box(
+        df_long,
+        x="Variable",
+        y="Valor",
+        color="Variable",
+        points="outliers",
+        title=f"Distribución de Notas – Comparación de Variables (n={n})",
+        labels={"Valor": "Nota"},
+        template="plotly_white"
+    )
 
-        # crear figura a partir de un DataFrame limpio
-        df_plot = nota_numeric.to_frame(name='Nota Final')
-        fig2 = px.box(df_plot, x='Nota Final', points='outliers',
-                      title=f'Diagrama de Caja - Nota Final (media {media:.2f})',
-                      labels={'Nota Final': 'Nota Final'})
+    # 5️⃣ Añadir puntos de media
+    medias = df_long.groupby("Variable")["Valor"].mean()
+    fig.add_trace(
+        go.Scatter(
+            x=medias.index,
+            y=medias.values,
+            mode="markers+text",
+            marker_symbol="diamond",
+            marker_size=10,
+            marker_color="red",
+            text=[f"{m:.2f}" for m in medias.values],
+            textposition="top center",
+            name="Media"
+        )
+    )
 
-        # añadir línea vertical indicando la media y una anotación
-        try:
-            fig2.add_vline(x=media, line=dict(color='red', dash='dash'))
-            fig2.add_annotation(x=media, y=1.05, xref='x', yref='paper',
-                                text=f'Media: {media:.2f}', showarrow=False,
-                                font=dict(color='red'))
-        except Exception:
-            # si la API falla por versiones antiguas, omitir la línea
-            pass
+    # 6️⃣ Ajustes visuales
+    fig.update_layout(
+        title=dict(x=0.5, font=dict(size=18)),
+        yaxis_title="Nota",
+        xaxis_title="Variable",
+        boxmode="group",
+        showlegend=True,
+        margin=dict(t=70, b=50, l=50, r=30),
+        plot_bgcolor="rgba(0,0,0,0)",
+        paper_bgcolor="rgba(0,0,0,0)"
+    )
 
-        st.plotly_chart(fig2, use_container_width=True)
-    else:
-        st.warning("La columna 'Nota Final' no está presente en el DataFrame.")
+    # 7️⃣ Mostrar gráfico
+    st.plotly_chart(fig, use_container_width=True)
 
-    st.markdown("""
-                    
-                    """) 
-    
-    st.markdown("""
-                <div
-                    <P style='color:#111111; font-weight:600; font-size:20px; margin:18px 0 6px 0;'><strong>Medidas de Tendencia Central</strong></P>
-                    <p style='color:#444444; text-align:justify; font-size:20px; margin:0 0 12px 0;'>La mediana se ubica en el valor 4, representada por la línea dentro de la caja, La media está representada con una linea punteada roja y tiene un valor de 3.78.</p>
-                    <p style='color:#111111; font-weight:600; font-size:20px; margin:18px 0 6px 0;'><strong>Medidas de Disperción</strong></p>
-                    <p style='color:#444444; text-align:justify; font-size:20px; margin:0 0 12px 0;'>El rango intercuartílico (IQR) abarca valores entre 3.4 y 4.4, lo que representa el 50% central de la distribución de datos. El bigote superior alcanza el valor máximo registrado de 5. El bigote inferior llega hasta un valor cercano a 1.8.</p>
-                    <p style='color:#111111; font-weight:600; font-size:20px; margin:18px 0 6px 0;'><strong>Valores Atípicos</strong></h3>
-                    <p style='color:#444444; text-align:justify; font-size:20px; margin:0 0 12px 0;'>Se observan numerosos valores atípicos en el rango de 0 a 1.8, representados por puntos individuales. Estos valores se encuentran por debajo del límite inferior del bigote, indicando calificaciones más bajas en comparación con la mayoría de los registros.</p>
-                </div>
-                """, unsafe_allow_html=True)     
-    
     st.markdown("""
                     
                     """)   
 #------------------------------------------------------------------------------------------------------------------------------------------------------------------------    
 
 #------------------------------------------------------------------------------------------------------------------------------------------------------------------------
-    st.markdown("""
-                <div
-                    <h2 style='color:#111111; font-weight:600; font-size:30px; margin:18px 0 6px 0;'>3.3. INFORMACIÓN ACADÉMICA Y DESEMPEÑO ESTUDIANTIL</h2>
-                    <br>
-                </div>
-                """, unsafe_allow_html=True)     
- 
-    st.markdown("""
-                    <div>
-                    <p style='color:#444444; text-align:justify; font-size:20px; margin:0 0 12px 0;'> 
-                    La siguiente tabla muestra un resumen descriptivo de las variables categóricas contenidas en la base de datos: Student Academic Record. Cada fila corresponde a una variable, indicando la cantidad de registros (observaciones), la cantidad de categorías únicas, la categoría más frecuente y su representación en frecuencias absolutas, relativas y porcentuales.
-                    </P>
-                    </div>
-                    """, unsafe_allow_html=True)   
-    
+  
     st.markdown("""
                     
                     """)  
@@ -604,7 +422,11 @@ def page_eda():
     )
 
     # Mostrar resultados en Streamlit con estilo (tabla estática)
-    st.markdown("### 🏷️ Resumen de Variables Categóricas")
+    st.markdown("### 🏷️ INFORMACIÓN ACADEMICA")
+    
+    st.markdown("""
+               
+                """, unsafe_allow_html=True)  
 
     # Formato para columnas numéricas
     fmt = {
@@ -629,415 +451,175 @@ def page_eda():
 
     st.markdown("""
                     
-                    """)  
-     
-    st.markdown("""
-                    <div>
-                    <p style='color:#444444; text-align:justify; font-size:20px; margin:0 0 12px 0;'> 
-                    En la variable Facultad, con 590.412 registros y 10 categorías únicas, la más frecuente es Ciencias Económicas, que aparece 162.135 veces. Esto representa una frecuencia relativa de 0.2750 y un 27.50% del total.
-                    En cuanto a Programa (Académico), que contiene 23 categorías, el más común es Derecho, con 66.000 registros. Esto equivale a una frecuencia relativa de 0.112 y un 11.20% del total de observaciones.
-                    La variable Asignatura cuenta con 3.999 categorías diferentes, siendo INGLÉS I la más frecuente, con 6.072 apariciones. Su representación porcentual es de 1.00%, lo cual evidencia su baja proporción frente al total de registros.
-                    Respecto al Grupo, con 86 categorías, la más repetida es A1, con 400.042 registros. Esta categoría concentra una frecuencia relativa de 0.6776, es decir, un 67.76% del total de casos.
-                    Por último, la variable Rendimiento, con 6 categorías posibles, tiene como valor más frecuente Alto, con 166.349 registros. Esto equivale a una frecuencia relativa de 0.2817 y un 28.18% del total de observaciones.
-                    </P>
-                    </div>
-                    """, unsafe_allow_html=True)   
-    
-    st.markdown("""
-                    
-                    """)
+                    """)     
+
 #------------------------------------------------------------------------------------------------------------------------------------------------------------------------    
 
 #------------------------------------------------------------------------------------------------------------------------------------------------------------------------
-    st.markdown("""
-                <div
-                    <h2 style='color:#111111; font-weight:600; font-size:30px; margin:18px 0 6px 0;'>3.4. COMPORTAMIENTO DEL RENDIMIENTO ACADÉMICO ESTUDIANTIL</h2>
-                    <br>
-                </div>
-                """, unsafe_allow_html=True)     
- 
-    st.markdown("""
-                    <div>
-                    <p style='color:#444444; text-align:justify; font-size:20px; margin:0 0 12px 0;'> 
-                    La siguiente figura, corresponde a una gráfica de barras que muestra la distribución de los estudiantes según los niveles de rendimiento académico (alcanzado). En el eje de las ordenadas (es decir, en el eje "y") se encuentra el número de estudiantes, mientras que en el eje de las abscisas (esto es, en el eje "x") se ubican las sesis (06) categorías de rendimiento definidas por intervalos de calificación.
-                    </P>
-                    </div>
-                    """, unsafe_allow_html=True)   
+    st.markdown("### 📈 COMPORTAMIENTO DEL RENDIMIENTO ACADÉMICO ESTUDIANTIL")
     
     st.markdown("""
                     
                     """)
+    
+    
+        # Validaciones de columnas requeridas
+    col_programa = "Programa"  # ajusta si tu columna se llama distinto
+    col_rend = "Rendimiento"
 
-    # Gráfico de barras para Rendimiento (Plotly / Matplotlib opcional)
-    if 'Rendimiento' not in df.columns:
-        st.warning("La columna 'Rendimiento' no está presente en el DataFrame. Imposible generar el gráfico de rendimiento.")
+    if col_rend not in df.columns:
+        st.warning(f"La columna '{col_rend}' no está presente en el DataFrame.")
     else:
-        # Conteo y orden jerárquico
-        orden = ["Insuficiente", "Deficiente", "Bajo", "Medio", "Alto", "Superior"]
-        rendimiento_counts = df['Rendimiento'].value_counts().reindex(orden).fillna(0).astype(int)
+        if col_programa not in df.columns:
+            st.warning(f"La columna '{col_programa}' no está presente en el DataFrame. Se mostrará sin filtro por programa.")
+            df_filtrado = df.copy()
+            seleccion_modo = "Todos"
+            seleccion_programas = []
+        else:
+            # ---- Selector de programa(s) con opción 'Todos' ----
+            #st.subheader("🎓 Filtro por Programa Académico")
+            programas_unicos = (
+                df[col_programa]
+                .dropna()
+                .astype(str)
+                .sort_values()
+                .unique()
+                .tolist()
+            )
 
-        # Preparar DataFrame (asegurar columna 'count')
-        df_rend = rendimiento_counts.reset_index(name='count').rename(columns={"index": "Rendimiento"})
+            seleccion_modo = st.radio(
+                "Ver:",
+                ["Todos los programas", "Filtrar por programa(s)"],
+                horizontal=True
+            )
 
-        # Forzar tipo numérico y calcular totales de forma segura
-        df_rend['count'] = pd.to_numeric(df_rend['count'], errors='coerce').fillna(0).astype(int)
-        total = int(df_rend['count'].sum())
-        df_rend['perc'] = (df_rend['count'] / total * 100).round(2) if total > 0 else 0
+            if seleccion_modo == "Todos los programas":
+                df_filtrado = df.copy()
+                seleccion_programas = []
+            else:
+                seleccion_programas = st.multiselect(
+                    "Selecciona programa(s):",
+                    options=programas_unicos,
+                    default=[],
+                    help="Si no seleccionas ninguno, no se mostrará el gráfico."
+                )
+                if len(seleccion_programas) == 0:
+                    st.info("Selecciona al menos un programa o cambia a 'Todos'.")
+                    st.stop()
+                df_filtrado = df[df[col_programa].astype(str).isin(seleccion_programas)].copy()
+                if df_filtrado.empty:
+                    st.warning("No hay registros para los programas seleccionados.")
+                    st.stop()
 
-        # Paleta y etiquetas
-        palette = {
+        # ---- Agregación de rendimiento (con orden estándar y extras) ----
+        orden_std = ["Insuficiente", "Deficiente", "Bajo", "Medio", "Alto", "Superior"]
+        categorias_presentes = (
+            df_filtrado[col_rend]
+            .dropna()
+            .astype(str)
+            .unique()
+            .tolist()
+        )
+        extras = [c for c in categorias_presentes if c not in orden_std]
+        orden = orden_std + sorted(extras)
+
+        counts = (
+            df_filtrado[col_rend]
+            .astype(str)
+            .value_counts()
+            .reindex(orden)
+            .fillna(0)
+            .astype(int)
+        )
+
+        df_rend = counts.reset_index(name="count").rename(columns={"index": col_rend})
+        total = int(df_rend["count"].sum())
+        df_rend["perc"] = (df_rend["count"] / total * 100).round(2) if total > 0 else 0.0
+
+        # ---- Paleta y etiquetas ----
+        base_palette = {
             "Insuficiente": "#E3F2FD",
-            "Deficiente": "#BBDEFB",
-            "Bajo": "#90CAF9",
-            "Medio": "#64B5F6",
-            "Alto": "#1976D2",
-            "Superior": "#0D47A1"
+            "Deficiente":  "#BBDEFB",
+            "Bajo":         "#90CAF9",
+            "Medio":        "#64B5F6",
+            "Alto":         "#1976D2",
+            "Superior":     "#0D47A1",
         }
+        palette = {c: base_palette.get(c, "#9E9E9E") for c in orden}
 
         labels_dict = {
             "Insuficiente": "Insuficiente < 2.0",
-            "Deficiente": "Deficiente ≥ 2.0",
-            "Bajo": "Bajo ≥ 3.0",
-            "Medio": "Medio ≥ 3.5",
-            "Alto": "Alto ≥ 4.0",
-            "Superior": "Superior > 4.5"
+            "Deficiente":   "Deficiente ≥ 2.0",
+            "Bajo":         "Bajo ≥ 3.0",
+            "Medio":        "Medio ≥ 3.5",
+            "Alto":         "Alto ≥ 4.0",
+            "Superior":     "Superior > 4.5",
         }
+        for c in extras:
+            labels_dict.setdefault(c, c)
 
-        # Controles interactivos
-        #st.markdown("**Filtrar categorías de Rendimiento**")
-        available_cats = df_rend.loc[df_rend['count'] > 0, 'Rendimiento'].tolist()
-        default = [c for c in orden if c in available_cats]
-        selected = st.multiselect("Selecciona categorías", options=available_cats, default=default)
+        # ---- UI de categorías visibles y modo de eje ----
+        # st.subheader("📊 Distribución del Rendimiento Académico")
+        available_cats = df_rend.loc[df_rend["count"] > 0, col_rend].tolist() or orden
 
-        if not selected:
-            st.warning("Selecciona al menos una categoría para mostrar el gráfico.")
+        mostrar_porcentaje = st.checkbox("Ver eje Y en porcentaje (%)", value=False)
+        #use_static = st.checkbox("Ver gráfico estático (Matplotlib)", value=False)
+
+
+        # ---- Construcción del DataFrame a graficar ----
+        plot_df = df_rend[df_rend[col_rend].isin(available_cats)].copy()
+        plot_df["label"] = plot_df[col_rend].map(labels_dict)
+        plot_df["color"] = plot_df[col_rend].map(palette)
+        plot_df["text_count"] = plot_df.apply(lambda r: f"{r['count']:,} ({r['perc']}%)", axis=1)
+
+        # ---- Título dinámico según el filtro ----
+        if seleccion_modo == "Todos":
+            subtitulo = "Todos los programas"
         else:
-            plot_df = df_rend[df_rend['Rendimiento'].isin(selected)].copy()
-            plot_df['label'] = plot_df['Rendimiento'].map(labels_dict)
-            plot_df['color'] = plot_df['Rendimiento'].map(palette)
-            plot_df['text'] = plot_df.apply(lambda r: f"{r['count']:,} ({r['perc']}%)", axis=1)
-
-            # Option: static Matplotlib or interactive Plotly
-            use_static = st.checkbox("Ver gráfico estático estilo presentación (Matplotlib)", value=False)
-
-            if use_static:
-                fig, ax = plt.subplots(figsize=(10, 5))
-                bars = ax.bar(
-                    plot_df['label'],
-                    plot_df['count'],
-                    color=[palette[r] for r in plot_df['Rendimiento']],
-                    edgecolor='black'
-                )
-
-                max_count = pd.to_numeric(plot_df['count'], errors='coerce').max()
-                max_count = int(max_count) if pd.notnull(max_count) else 0
-                ymax = int(max_count * 1.08) if max_count > 0 else 1
-                ax.set_ylim(0, max(180000, ymax))
-
-                # Anotaciones
-                for bar, txt in zip(bars, plot_df['text']):
-                    height = bar.get_height()
-                    ax.text(bar.get_x() + bar.get_width() / 2, height + (ymax * 0.005), txt,
-                            ha='center', va='bottom', fontsize=9, fontweight='bold')
-
-                # Leyenda con patches
-                handles = [mpatches.Patch(color=palette[r], label=labels_dict[r]) for r in plot_df['Rendimiento']]
-                ax.legend(handles=handles, loc='center left', bbox_to_anchor=(1, 0.5), frameon=False)
-
-                ax.set_title('Distribución del Rendimiento Académico')
-                ax.set_xlabel('Rendimiento')
-                ax.set_ylabel('Número de Estudiantes')
-                ax.set_xticks(range(len(plot_df['label'])))
-                ax.set_xticklabels(plot_df['label'], rotation=0)
-                plt.tight_layout()
-                st.pyplot(fig)
+            # limitar en título si hay muchos
+            if len(seleccion_programas) <= 3:
+                subtitulo = ", ".join(seleccion_programas)
             else:
-                fig = px.bar(
-                    plot_df,
-                    x='label',
-                    y='count',
-                    text='text',
-                    color='Rendimiento',
-                    color_discrete_map=palette,
-                    category_orders={'Rendimiento': orden}
-                )
+                subtitulo = f"{len(seleccion_programas)} programas seleccionados"
 
-                fig.update_traces(textposition='outside')
-                fig.update_layout(
-                    title='Distribución del Rendimiento Académico',
-                    xaxis_title='',
-                    yaxis_title='Número de Estudiantes',
-                    legend_title_text='Rendimiento',
-                    margin=dict(r=180),
-                    uniformtext_minsize=8,
-                    uniformtext_mode='hide'
-                )
+        titulo = f"Distribución del Rendimiento Académico — {subtitulo}"
 
-                st.plotly_chart(fig, use_container_width=True)
+        # ---- Render: Plotly ----
+        y_col = "perc" if mostrar_porcentaje else "count"
+        y_title = "Porcentaje de Estudiantes (%)" if mostrar_porcentaje else "Número de Estudiantes"
 
-            # Tabla resumen debajo del gráfico
-            #summary = plot_df[['label', 'count', 'perc']].copy()
-            #summary = summary.rename(columns={'label': 'Categoría', 'count': 'Frecuencia', 'perc': 'Porcentaje (%)'})
+        fig = px.bar(
+                plot_df,
+                x="label",
+                y=y_col,
+                text="text_count",
+                color=col_rend,
+                color_discrete_map=palette,
+                category_orders={col_rend: orden},
+                title=titulo
+            )
 
-            # Formatear columnas para presentación
-            #summary['Frecuencia'] = summary['Frecuencia'].map(lambda x: f"{int(x):,}")
-            #summary['Porcentaje (%)'] = summary['Porcentaje (%)'].map(lambda x: f"{float(x):.2f}")
+        fig.update_traces(textposition="outside", cliponaxis=False)
+        if mostrar_porcentaje:
+                fig.update_yaxes(range=[0, 100])
 
-            # Mostrar encabezado y la tabla estilizada
-            #st.markdown("### Distribución del Rendimiento Académico")
-            # usar st.dataframe para mantener el ancho y permitir copiar/paginado
-            #styled_summary = (
-            #    summary.style
-            #    .set_table_styles([
-            #        {"selector": "thead th", "props": [("background-color", "#111111"), ("color", "#ffffff"), ("font-weight", "600")]},
-            #        {"selector": "tbody td", "props": [("font-size", "13px"), ("text-align", "center")]}
-            #    ])
-            #    .hide(axis="index")
-            #)
-
-            #st.dataframe(styled_summary, use_container_width=True)
-   
-    st.markdown("""
-                    
-                    """)
-
-    st.markdown("""
-                    <div>
-                    <p style='color:#444444; text-align:justify; font-size:20px; margin:0 0 12px 0;'> 
-                    El nivel Insuficiente (< 2.00), se corresponde con 25.606 estudiantes, que equivale al 4.34%. El nivel Deficiente (≥ 2.00) cuenta con 31.947 estudiantes, lo que representa el 5.41% del total. El nivel Bajo (≥ 3.00) agrupa a 98.758 estudiantes, equivalentes al 16.73%. Posteriormente, el nivel Medio (≥ 3.50) alcanza un total de 133.608 estudiantes, que corresponden al 22.63% de la muestra.
-                    La categoría Alto (≥ 4.00) concentra la mayor proporción de estudiantes, con 166.349 casos, es decir, el 28.18% del total. Por su parte, el nivel Superior (> 4.50) reúne 134.144 estudiantes, equivalente al 22.72%.
-                    En conjunto, la gráfica permite visualizar la distribución de las frecuencias absolutas y relativas de los estudiantes en cada nivel de rendimiento, destacando la presencia de un mayor número de estudiantes en las categorías altas en comparación con las más bajas.
-                    </P>
-                    </div>
-                    """, unsafe_allow_html=True)   
+        fig.update_layout(
+                xaxis_title="",
+                yaxis_title=y_title,
+                legend_title_text="Rendimiento",
+                margin=dict(r=180),
+                uniformtext_minsize=8,
+                uniformtext_mode="hide",
+                plot_bgcolor="rgba(0,0,0,0)",
+                paper_bgcolor="rgba(0,0,0,0)",
+                title_x=0.5
+            )
+        st.plotly_chart(fig, use_container_width=True)
     
     st.markdown("""
                     
                     """)
-#------------------------------------------------------------------------------------------------------------------------------------------------------------------------    
 
-#------------------------------------------------------------------------------------------------------------------------------------------------------------------------
-    st.markdown("""
-                <div
-                    <h2 style='color:#111111; font-weight:600; font-size:30px; margin:18px 0 6px 0;'>3.5. NOTA FINAL PROMEDIO POR PROGRAMA ACADEMICO</h2>
-                    <br>
-                </div>
-                """, unsafe_allow_html=True)     
- 
-    st.markdown("""
-                    <div>
-                    <p style='color:#444444; text-align:justify; font-size:20px; margin:0 0 12px 0;'> 
-                    La siguiente figura corresponde a una gráfica de barras horizontales que muestra el valor medio de la nota final por cada programa académico. En el eje de las ordenadas (es decir, en el eje de las "y") se encuentran listados los programas, mientras que en el eje de las abscisas (esto es, en el eje de las "x") se representan las notas promedio, con un rango que va de 0 a 5.
-                    </P>
-                    </div>
-                    """, unsafe_allow_html=True)   
-    
-    st.markdown("""
-                    
-                    """) 
-    
-    # Gráfico de barras horizontales para Nota Final por Programa (Plotly / Matplotlib opcional)
-    if 'Programa' not in df.columns or 'Nota Final' not in df.columns: 
-        st.warning("Las columnas 'Programa' o 'Nota Final' no están presentes en el DataFrame. Imposible generar el gráfico de nota final por programa.")     
-    else:
-        # Calcular promedio de Nota Final por Programa
-        nota_numeric = pd.to_numeric(df['Nota Final'], errors='coerce')
-        df_prog = df[['Programa']].copy()
-        df_prog['Nota Final'] = nota_numeric
-        avg_nota_prog = (
-            df_prog.groupby('Programa', as_index=False)
-            .agg({'Nota Final': 'mean'})
-            .rename(columns={'Nota Final': 'Avg Nota Final'})
-        )
-        
-        # Ordenar de mayor a menor promedio
-        avg_nota_prog = avg_nota_prog.sort_values(by='Avg Nota Final', ascending=False)
-
-        # Controles interactivos
-        st.markdown("**Filtrar Programas Académicos**")
-        available_programs = avg_nota_prog['Programa'].tolist()
-        default_programs = available_programs[:23]  # seleccionar los 23 por defecto
-        selected_programs = st.multiselect("Selecciona programas", options=available_programs, default=default_programs)
-
-        if not selected_programs:
-            st.warning("Selecciona al menos un programa para mostrar el gráfico.")
-        else:
-            plot_df = avg_nota_prog[avg_nota_prog['Programa'].isin(selected_programs)].copy()
-            plot_df['text'] = plot_df['Avg Nota Final'].map(lambda x: f"{x:.2f}")
-
-            # Option: static Matplotlib or interactive Plotly
-            use_static1 = st.checkbox("Ver gráfico estático estilo presentación (Matplotlib)", value=False, key="eda_static")
-
-            if use_static1:
-                fig, ax = plt.subplots(figsize=(10, 6))
-                bars = ax.barh(
-                    plot_df['Programa'],
-                    plot_df['Avg Nota Final'],
-                    color='#1976D2',
-                    edgecolor='black'
-                )
-
-                max_avg = pd.to_numeric(plot_df['Avg Nota Final'], errors='coerce').max()
-                max_avg = float(max_avg) if pd.notnull(max_avg) else 0
-                xmax = max_avg * 1.08 if max_avg > 0 else 1
-                ax.set_xlim(0, max(5.0, xmax))
-
-                # Anotaciones
-                for bar, txt in zip(bars, plot_df['text']):
-                    width = bar.get_width()
-                    ax.text(width + (xmax * 0.005), bar.get_y() + bar.get_height() / 2, txt,
-                            ha='left', va='center', fontsize=9, fontweight='bold')  
-                ax.set_title('Nota Final Promedio por Programa Académico')
-                ax.set_xlabel('Nota Final Promedio')
-                ax.set_ylabel('Programa')
-                plt.tight_layout()
-                st.pyplot(fig)
-                
-            else:   
-                fig = px.bar(
-                    plot_df,
-                    x='Avg Nota Final',
-                    y='Programa',
-                    text='text',
-                    orientation='h',
-                    color_discrete_sequence=["#0C549C"]
-                )
-
-                fig.update_traces(textposition='outside',
-                                  textfont=dict(size=11, color='black', family='Arial',),
-                                  hovertemplate='<b>%{y}</b><br>Nota Promedio: %{x:.2f}<extra></extra>'
-                                  )
-                
-                fig.update_layout(
-                    height=600,
-                    title='Nota Final Promedio por Programa Académico',
-                    xaxis_title='Nota Final Promedio',
-                    yaxis_title='Programa',
-                    margin=dict(r=200),
-                    uniformtext_minsize=8,
-                    uniformtext_mode='hide'
-                )
-
-                st.plotly_chart(fig, use_container_width=True)
-
-    st.markdown("""
-                    
-                    """) 
-    
-    st.markdown("""
-                    <div>
-                        <p style='color:#444444; text-align:justify; font-size:20px; margin:0 0 12px 0;'> 
-                        El programa con el promedio más alto corresponde a <b>Licenciatura en Educación Infantil</b>, con una nota de <b>4.42</b>, seguido de <b>Licenciatura en Educación</b> con <b>4.22</b>. En tercer lugar se ubica <b>Comunicación Social</b> (4.02), mientras que <b>Ingeniería Química</b> e <b>Historia</b> registran un promedio de <b>3.99</b>. Estos programas conforman el grupo de mejor desempeño académico dentro de la gráfica.
-                        <br><br>
-                        En un nivel intermedio destacan <b>Medicina</b> (3.92), <b>Lenguas Extranjeras</b> (3.91), <b>Administración de Empresas</b> (3.85), <b>Derecho</b> (3.83), <b>Lingüística y Literatura</b> (3.83) y <b>Administración Industrial</b> (3.80). Todos ellos se concentran en torno al valor de 3.8, representando una franja de rendimiento medio-alto.
-                        <br><br>
-                        Con promedios ligeramente inferiores se encuentran <b>Contaduría Pública</b> (3.76), <b>Odontología</b> (3.74), <b>Ingeniería Civil</b> (3.74) y <b>Química Farmacéutica</b> (3.72), seguidos de <b>Enfermería</b> (3.66), <b>Química</b> (3.64) y <b>Economía</b> (3.61).
-                        <br><br>
-                        Finalmente, los resultados más bajos corresponden a <b>Ingeniería de Alimentos</b> (3.53), <b>Matemáticas</b> (3.49), <b>Biología</b> (3.49), <b>Ingeniería de Sistemas</b> (3.48) y <b>Filosofía</b> (3.38), este último con el promedio más bajo registrado.
-                        <br><br>
-                        En conjunto, la visualización permite contrastar el rendimiento promedio de los distintos programas académicos, evidenciando una variación que va desde <b>4.42</b> hasta <b>3.38</b>.
-                        </p>
-                    </div>
-                    """, unsafe_allow_html=True)   
-    
-    st.markdown("""
-                    
-                    """) 
-
-
-    # --- Tabla Rendimiento  ---
-    # 0) Orden de Rendimiento
-    orden_rend = ["Insuficiente", "Deficiente", "Bajo", "Medio", "Alto", "Superior"]
-    df["Rendimiento"] = pd.Categorical(df["Rendimiento"], categories=orden_rend, ordered=True)
-
-    # 1) Promedios por rendimiento (pivot)
-    promedios = df.pivot_table(
-        values="Nota Final",
-        index="Programa",
-        columns="Rendimiento",
-        aggfunc="mean",
-        observed=False
-    ).round(2)
-
-    # 2) Conteos y porcentajes
-    conteos = df.pivot_table(
-        values="Nota Final",
-        index="Programa",
-        columns="Rendimiento",
-        aggfunc="count",
-        observed=False
-    )
-    totales = conteos.sum(axis=1)
-    porcentajes = (conteos.div(totales, axis=0) * 100).round(1)
-
-    # 3) Combinar promedios y porcentajes
-    tabla_final = promedios.combine(
-        porcentajes,
-        lambda prom, perc: prom.round(2).astype(str) + " (" + perc.round(1).astype(str) + "%)"
-    ).reset_index()
-
-    # ---------- PROMEDIO GENERAL ----------
-    promedios_generales = df.groupby("Programa")["Nota Final"].mean().round(2)
-    max_programa = promedios_generales.max()
-    porcentajes_generales = ((promedios_generales / max_programa) * 100).round(1)
-    formatted_general = promedios_generales.astype(str) + " (" + porcentajes_generales.astype(str) + "%)"
-
-    tabla_final["Promedio General"] = tabla_final["Programa"].map(lambda x: f"{promedios_generales[x]:.2f}")
-
-    orden_promedio = promedios_generales.sort_values(ascending=False).index
-    tabla_final = tabla_final.set_index("Programa").loc[orden_promedio].reset_index()
-
-    # MultiIndex columnas
-    tabla_final.columns = pd.MultiIndex.from_tuples(
-        [("","Programa")] +
-        [("Rendimiento Académico", col) for col in orden_rend] +
-        [("","Media")]
-    )
-
-    # Estilo (Pandas Styler)
-    styled = (
-        tabla_final.style
-        .set_table_styles([
-            {"selector": "caption",
-            "props": [("font-size", "16px"), ("font-weight", "bold"), ("color", "white"), ("background-color", "#1976D2"), ("padding", "6px 10px"), ("border-radius", "6px")]},
-            {"selector": "th",
-            "props": [("text-align", "center")]},
-            {"selector": "td",
-            "props": [("text-align", "right")]},
-            {"selector": "td:first-child",
-            "props": [("text-align", "left")]}
-        ])
-        .hide(axis="index")
-    )
-
-    # --- Visualización en Streamlit ---
-    st.subheader("Distribución de la Nota Final Promedio por Rendimiento y Programa Académico")
-
-    # Prefijo para claves (evita IDs duplicados si lo usas en varias páginas)
-    PREFIX = "eda_tabla_rend_prog"
-
-    #modo = st.radio(
-    #    "Modo de visualización",
-    #    ["Interactiva (st.dataframe)", "HTML estilizado (to_html)"],
-    #    index=0,
-    #    key=f"{PREFIX}_modo"
-    #)
-
-    #if modo.startswith("Interactiva"):
-        # st.dataframe no muestra bien los MultiIndex de columnas; los aplanamos para legibilidad
-    df_flat = tabla_final.copy()
-    df_flat.columns = [
-        ("{} - {}".format(a.strip(), b.strip()) if a and b else (a or b)).strip()
-        for a, b in df_flat.columns.to_list()
-    ]
-    st.dataframe(df_flat, use_container_width=True, key=f"{PREFIX}_df")
-    #else:
-        # Render HTML del Styler (mejor respeta el CSS del Styler)
-    #    st.markdown(styled.to_html(), unsafe_allow_html=True)
-
-    st.markdown("""
-                    
-                    """)       
     st.markdown("""
                     <div>
                     <p style='color:#444444; text-align:justify; font-size:20px; margin:0 0 12px 0;'> 
@@ -1052,20 +634,8 @@ def page_eda():
 #------------------------------------------------------------------------------------------------------------------------------------------------------------------------    
 
 #------------------------------------------------------------------------------------------------------------------------------------------------------------------------
-    st.markdown("""
-                <div
-                    <h2 style='color:#111111; font-weight:600; font-size:30px; margin:18px 0 6px 0;'>3.6. NOTA FINAL PROMEDIO POR AÑO Y PERÍODO ACADÉMICO</h2>
-                    <br>
-                </div>
-                """, unsafe_allow_html=True)     
- 
-    st.markdown("""
-                    <div>
-                    <p style='color:#444444; text-align:justify; font-size:20px; margin:0 0 12px 0;'> 
-                    La siguiente gráfica de columnas muestra la evolución del valor medio de la nota final entre los años 2014 y 2023, diferenciado por períodos académicos (1er semestre y 2do semestre). En general, los valores se mantienen relativamente estables en la mayoría de los años, con un comportamiento particular en el 2020 y 2021.
-                    </P>
-                    </div>
-                    """, unsafe_allow_html=True)   
+  
+    st.markdown("### 📈 COMPORTAMIENTO NOTA FINAL") 
     
     st.markdown("""
                     
@@ -1122,7 +692,7 @@ def page_eda():
 
     fig.update_layout(
         height=500,
-        title="Nota Final Promedio por Año y Periodo Académico",
+        #title="Nota Final Promedio por Año y Periodo Académico",
         legend_title_text="Periodo Académico",
         uniformtext_minsize=8,
         uniformtext_mode="show",
@@ -1135,24 +705,6 @@ def page_eda():
     st.markdown("""
                     
                     """)    
-    st.markdown("""
-                    <div>
-                    <p style='color:#444444; text-align:justify; font-size:20px; margin:0 0 12px 0;'> 
-                    Entre 2014 y 2019, los promedios rondan entre 3.64 y 3.78, evidenciando estabilidad y sin variaciones significativas entre los dos períodos de cada año. Los valores más bajos de este lapso se observan en 2015 (3.64 en el período 2) y los más altos en 2018 (3.78 en el período 2).
-                    <br><br>
-                    En el año 2020 se presenta un incremento destacado, con promedios de 4.22 en el período 1 y 4.19 en el período 2, lo que representa un aumento considerable respecto a los años anteriores. Esta tendencia ascendente se acentúa en 2021, donde se alcanzan los valores más altos de toda la serie: 4.18 en el período 1 y un máximo de 4.50 en el período 2.
-                    <br><br>
-                    A partir de 2022, los promedios retornan a niveles similares a los de años previos, ubicándose entre 3.75 y 3.71 en 2022 y en 3.76 y 3.73 en el 2023, lo que sugiere un regreso a la estabilidad después del repunte observado entre 2020 y el 2021.
-                    <br><br>
-                    En conclusión, la gráfica refleja un comportamiento estable en los promedios entre 2014 y 2019, un repunte significativo en 2020 y 2021 y un retorno a valores regulares en los años posteriores.
-                    </P>
-                    </div>
-                    """, unsafe_allow_html=True)   
-    
-    st.markdown("""
-                    
-                    """)    
-
 
     # =========================
     # Construir tabla formateada y styler
@@ -1230,7 +782,6 @@ def page_eda():
 
         return tabla_fmt, styled, pivot_mean.round(2), pct.round(1)
 
-
     # Construir 
     try:
         tabla_fmt, styled, pivot_mean, pct = construir_tabla_formateada(df)
@@ -1250,97 +801,18 @@ def page_eda():
     st.dataframe(tabla_fmt, use_container_width=True, height=500)
     #else:
     #    st.markdown(styled.to_html(), unsafe_allow_html=True)
-
-    st.markdown("""
-                    <div>
-                    <p style='color:#444444; text-align:justify; font-size:20px; margin:0 0 12px 0;'> 
-                    Visualizando esto en una tabla, se obverva que entre 2014 y 2019, el rendimiento académico por período se mantuvo estable, con proporciones constantes en cada categoría: aproximadamente 10% de estudiantes en nivel deficiente, 18% en bajo, 21% en medio, 24% en alto y 27% en superior.  Entre 2020 y 2023 se observa una evolución progresiva en el rendimiento académico, con variaciones significativas entre períodos. En 2020, el primer período muestra una mayor concentración en niveles altos y superiores (53.8%), mientras que el segundo período presenta un aumento en el nivel deficiente (de 4.4% a 8.6%), lo que sugiere una caída en el rendimiento en la segunda mitad del año. En 2021, el primer período mantiene una distribución similar al año anterior, pero el segundo período presenta una anomalía: todos los registros se agrupan en el nivel superior (100%). En 2022, ambos períodos muestran una distribución más equilibrada y finalmente, en 2023, el primer período presenta el porcentaje más alto de estudiantes en nivel deficiente (9.3%), mientras que el segundo período muestra una mejora (8.5%) y un aumento en el nivel superior (27.2%), lo que indica una recuperación en el rendimiento hacia el cierre del año.
-                    </P>
-                    </div>
-                    """, unsafe_allow_html=True)   
-    
-    st.markdown("""
-                                    """, unsafe_allow_html=True) 
  
 #------------------------------------------------------------------------------------------------------------------------------------------------------------------------    
 
 #------------------------------------------------------------------------------------------------------------------------------------------------------------------------
     st.markdown("""
-                <div
-                    <h2 style='color:#111111; font-weight:600; font-size:30px; margin:18px 0 6px 0;'>3.7.PRUEBA PARAMÉTRICA: CORRELACIÓN DE PEARSON</h2>
-                    <br>
-                </div>
-                """, unsafe_allow_html=True)     
- 
-    st.markdown("""
-                    <div>
-                    <p style='color:#444444; text-align:justify; font-size:20px; margin:0 0 12px 0;'> 
-                    La siguiente tabla, muestra la relación entre las notas parciales y la Nota Final mediante el coeficiente de correlación de Pearson. Los resultados dan cuenta de un comportamientos heterogéneos en cuanto a la magnitud y dirección de las asociaciones.
-                    </P>
-                    </div>
-                    """, unsafe_allow_html=True)   
-    
-    st.markdown("""
                     
-                    """) 
-
-    # -------------------------------------------------
-    # Tabla de Correlación de Pearson
-    # -------------------------------------------------
-    variables = ["Nota 1", "Nota 2", "Nota 3", "Nota 4",
-                "Nota Definitiva", "Nota Habilitación"]
-    target = "Nota Final"
-
-    # Verificar columnas presentes (evita errores si falta alguna)
-    cols_presentes = [c for c in variables + [target] if c in df.columns]
-    if target not in cols_presentes:
-        st.error(f"No se encontró la columna objetivo: '{target}' en el DataFrame.")
-    else:
-        vars_presentes = [c for c in variables if c in cols_presentes]
-
-        # Calcular correlaciones Pearson
-        Pearson_corr = (
-            df[vars_presentes + [target]]
-            .corr(method="pearson")[target]
-            .drop(target)
-            .sort_values(ascending=False, key=lambda s: s.abs())  # ordenar por |corr|
-            .round(3)
-        )
-
-        corr_df = pd.DataFrame({"Correlación Pearson": Pearson_corr})
-
-        # Mostrar tabla en Streamlit
-        st.dataframe(
-                corr_df,
-                use_container_width=False,
-                hide_index=False
-            )
-
-    st.markdown("""
-                    
-                    """) 
-    
-    st.markdown("""
-                    <div>
-                    <p style='color:#444444; text-align:justify; font-size:20px; margin:0 0 12px 0;'> 
-                    La Nota 1 presenta un coeficiente de correlación de Pearson de 0.1460, mientras que la Nota 2 registra un valor de 0.1760, ambos resultados indican asociaciones positivas de baja magnitud con la Nota Final.
-                    La Nota 3 alcanza un coeficiente de Pearson de 0.5630, valor que representa la asociación positiva más alta entre las notas parciales y la Nota Final.
-                    Por otro lado, la Nota 4 muestra un valor de 0.019, prácticamente nulo, lo que evidencia ausencia de relación monótona con la Nota Final.
-                    La Nota Definitiva registra un coeficiente de Pearson de 0.9890, siendo el valor más alto en la tabla y reflejando una asociación positiva casi perfecta con la Nota Final.
-                    Finalmente, la Nota de Habilitación presenta un coeficiente negativo de -0.078, indicando una asociación inversa de baja magnitud con la Nota Final.
-                    </P>
-                    </div>
-                    """, unsafe_allow_html=True)   
-    
-    st.markdown("""
-                    
-                    """)             
-
+                    """)
     # -------------------------------------------------
     # Matriz de Correlación de Person
     # -------------------------------------------------
     
-    st.subheader("🔥 Matriz de correlaciones")
+    st.subheader("🔥 MATRIZ DE CORRELACIÓN DE PEARSON")
 
     # ---------------------------
     # Controles
@@ -1361,7 +833,7 @@ def page_eda():
 
       
     solo_triangulo_superior = st.checkbox("Mostrar solo triángulo superior", value=False)
-    usar_absoluto_para_orden = st.checkbox("Ordenar variables por |correlación| con la primera seleccionada", value=False)
+    #usar_absoluto_para_orden = st.checkbox("Ordenar variables por |correlación| con la primera seleccionada", value=False)
     #aplicar_clustering = st.checkbox("Aplicar ordenamiento por clustering jerárquico", value=False)
 
     if len(cols) < 2:
@@ -1388,28 +860,14 @@ def page_eda():
     # ---------------------------
     # Ordenamiento opcional
     # ---------------------------
-    orden = list(corr.columns)
+    #orden = list(corr.columns)
 
     # a) Orden por |corr| respecto a la primera seleccionada
-    if usar_absoluto_para_orden and len(orden) > 1:
-        ref = orden[0]
-        orden = [ref] + [c for c in sorted(orden[1:], key=lambda c: -abs(corr.loc[ref, c]))]
-        corr = corr.loc[orden, orden]
-
-    # b) Clustering jerárquico
-    #if aplicar_clustering and corr.shape[0] >= 2:
-        # Distancia = 1 - |corr| para agrupar similar por magnitud
-    #    from scipy.cluster.hierarchy import linkage, leaves_list
-    #    from scipy.spatial.distance import squareform
-
-    #    corr_filled = corr.fillna(0)
-    #    dist = 1 - np.abs(corr_filled)
-    #    # squareform requiere matriz simétrica sin diagonal en vector condensado
-    #    dist_vec = squareform(dist.values, checks=False)
-    #    Z = linkage(dist_vec, method="average")
-    #    orden_idx = leaves_list(Z)
-    #    orden = corr.index[orden_idx].tolist()
+    #if usar_absoluto_para_orden and len(orden) > 1:
+    #    ref = orden[0]
+    #    orden = [ref] + [c for c in sorted(orden[1:], key=lambda c: -abs(corr.loc[ref, c]))]
     #    corr = corr.loc[orden, orden]
+
 
     # ---------------------------
     # Máscara de triángulo superior
@@ -1443,25 +901,11 @@ def page_eda():
 
 #------------------------------------------------------------------------------------------------------------------------------------------------------------------------
     st.markdown("""
-                <div
-                    <h2 style='color:#111111; font-weight:600; font-size:30px; margin:18px 0 6px 0;'>3.8.PRUEBA DE INDEPENDENCIA: PRUEBA CHI-CUADRADO</h2>
-                    <br>
-                </div>
-                """, unsafe_allow_html=True)     
- 
-    st.markdown("""
-                    <div>
-                    <p style='color:#444444; text-align:justify; font-size:20px; margin:0 0 12px 0;'> 
-                    El análisis estadístico realizado mediante la prueba Chi-cuadrado de independencia permite establecer si existe una relación significativa entre el Rendimiento (académico) de los estudiantes y las variables Programa (académico) y Asignatura. Los resultados muestran que, en todos los casos evaluados, el valor p fue prácticamente cero, lo que indica una fuerte evidencia para rechazar la hipótesis nula de independencia. En otras palabras, se confirma que sí existe asociación entre las variables analizadas y el Rendimiento (académico).
-                    </P>
-                    </div>
-                    """, unsafe_allow_html=True)   
-    
-    st.markdown("""
                     
-                    """) 
-   
-
+                    """)  
+    
+    st.subheader("📉 PRUEBA CHI²")
+    
     # ---------------------------------------------------
     # Función para prueba Chi²
     # ---------------------------------------------------
@@ -1508,21 +952,6 @@ def page_eda():
     else:
         st.info("No se pudieron generar resultados de Chi² con las columnas disponibles.")
 
-    st.markdown("""
-                    
-                    """) 
-    
-    st.markdown("""
-                    <div>
-                    <p style='color:#444444; text-align:justify; font-size:20px; margin:0 0 12px 0;'> 
-                    En primer lugar, se encontró que el Rendimiento (académico) depende del Programa (académico) en el que se encuentra matriculado el estudiante. Esto significa que la distribución de los niveles de Rendimiento (Insudiciente, Deficiente, Bajo, Medio, Alto y Superior) no es homogénea entre los diferentes programas, sino que algunos de ellos tienden a concentrar mayor o menor proporción de estudiantes con Rendimientos destacados y, en segundo lugar, al analizar la relación entre las Asignaturas y el Rendimiento (académico), se observó una asociación aún más fuerte. Esto refleja que el tipo de Asignatura influye significativamente en el desempeño de los estudiantes.
-                    </P>
-                    </div>
-                    """, unsafe_allow_html=True)   
-    
-    st.markdown("""
-                    
-                    """)  
     
 #------------------------------------------------------------------------------------------------------------------------------------------------------------------------    
 
@@ -1542,9 +971,6 @@ def page_model():
                     <p style='color:#333333; font-size:18px; font-family: Tahoma, "Tahoma", Geneva, sans-serif; text-align:justify; text-justify:inter-word; line-height:1.6; margin:0;'>
                     Este módulo implementa un modelo predictivo desarrollado mediante el algoritmo <strong>XGBoost (Extreme Gradient Boosting)</strong>, reconocido por su alta eficiencia en tareas de clasificación supervisada y su capacidad para manejar grandes volúmenes de datos.  
                     El modelo fue entrenado con una base de datos que reúne más de <strong>470.000 observaciones</strong> de estudiantes de programas universitarios presenciales, integrando tanto variables <strong>numéricas</strong> (notas parciales) como <strong>categóricas</strong> (programa académico y asignatura).  
-                    <br><br>
-                    Para optimizar su desempeño se aplicó un proceso de <strong>búsqueda en malla (GridSearchCV)</strong> y <strong>validación cruzada de dos particiones (2-Fold CV)</strong>, evaluando 16 combinaciones de hiperparámetros.  
-                    Como resultado, el modelo alcanzó una <strong>exactitud global del 93%</strong> y un <strong>índice Kappa ponderado de 0.90</strong>, evidenciando una alta concordancia entre las categorías reales y las predicciones estimadas.  
                     </p>
                     </div>
                 """, unsafe_allow_html=True)
@@ -1552,6 +978,8 @@ def page_model():
     st.markdown("""
 ---
                 """, unsafe_allow_html=True)    
+    
+    
    
     # ============================================
     # 0) Parche de compatibilidad sklearn (monkey-patch)
@@ -1713,7 +1141,7 @@ def page_model():
             asignaturas_disp = mapa_prog_asig.get(programa, [])
             asignatura = st.selectbox("Asignatura", options=asignaturas_disp)
             nota2 = st.number_input("Nota 2", value=4.0, step=0.1, format="%.2f")
-            nota4 = st.number_input("Nota 4", value=4.2, step=0.1, format="%.2f")
+            #nota4 = st.number_input("Nota 4", value=4.2, step=0.1, format="%.2f")
 
         if st.button("Predecir Rendimiento"):
             try:
@@ -1722,8 +1150,7 @@ def page_model():
                     "Asignatura": asignatura,
                     "Nota 1": nota1,
                     "Nota 2": nota2,
-                    "Nota 3": nota3,
-                    "Nota 4": nota4
+                    "Nota 3": nota3
                 }])
 
                 # Alinear columnas y tipos
@@ -1796,84 +1223,80 @@ def page_model():
                 st.error(f"Error procesando el CSV: {e}")
 
     st.markdown("""
+---
+                """, unsafe_allow_html=True)  
+    
+    st.markdown("""
                 <div style='padding:8px 0; margin-bottom:8px;'>
                     <p style='color:#333333; font-size:18px; font-family: Tahoma, "Tahoma", Geneva, sans-serif; text-align:justify; text-justify:inter-word; line-height:1.6; margin:0;'>
-                    El modelo predice la categoría de rendimiento esperada —desde Insuficiente hasta Superior— utilizando los patrones de aprendizaje adquiridos durante su fase de entrenamiento con XGBoost.
-                    A partir de las notas ingresadas y las variables contextuales (como el programa académico y la asignatura), el modelo evalúa la probabilidad de pertenencia a cada nivel de desempeño y selecciona la categoría más probable, reflejando la estructura ordinal y continua del rendimiento estudiantil
+                    Para optimizar su desempeño se aplicó un proceso de <strong>búsqueda en malla (GridSearchCV)</strong> y <strong>validación cruzada de dos particiones (2-Fold CV)</strong>, evaluando 16 combinaciones de hiperparámetros.  
+                    Como resultado, el modelo alcanzó una <strong>exactitud global del 93%</strong> y un <strong>índice Kappa ponderado de 0.90</strong>, evidenciando una alta concordancia entre las categorías reales y las predicciones estimadas.  
                     </p>
                     </div>
                 """, unsafe_allow_html=True)
-
-
-
     
-
-
-def page_conclusions():
-    # Título 
     st.markdown("""
-                    <div style='position:fixed; top:40px; left:400px; right:24px; background:#ffffff; padding:10px 16px; z-index:9999; border-bottom:1px solid rgba(0,0,0,0.06);'>
-                    <h1 style='color:#111111; font-weight:700; font-size:45px; margin:0;'>CONCLUSIONES</h1>
-                </div>
-                    <div style='height:64px;'></div>
+
                 """, unsafe_allow_html=True)
-    #Contenido
-    
-    st.markdown("""
-                    <div>
-                    <p style='color:#444444; text-align:justify; font-size:20px; margin:0 0 12px 0;'> 
-                    Este documento presenta un Análisis Exploratorio de los Datos (-EDA-) sobre el Rendimiento (académico) de estudiantes de una Institución de Educación Superior en Colombia y sus principales factores asociados, a partir del conjunto de datos denominado “Student Academic Record (SAR)”, compuesto por 590.412 observaciones y 16 variables (sin valores faltantes). Las variables se agrupan en cuatro categorías principales: Información Académica, Récord de Notas, Desempeño estudiantil y temporalidad, siendo la variable de interés el Rendimiento Académico (categórica ordinal).
-                    <br><br>    
-                    Los resultados preliminares evidencian que las Notas 1 y 2 presentan bajos promedios y alta dispersión; la Nota 3 concentra calificaciones altas y muestra la mayor correlación con la Nota Final (𝜌 = 0.5630); la Nota 4 se caracteriza por ausencia de registros significativos; mientras que la Nota Definitiva y la Nota Final reflejan una fuerte concentración en calificaciones altas y una asociación casi perfecta (𝜌 = 0.9890). La Nota de Habilitación, en contraste, es poco frecuente y se relaciona negativamente con la Nota Final.
-                    <br><br>
-                    Finalmente, los análisis de asociación mediante Chi-cuadrado revelaron dependencias significativas entre el Rendimiento (académico) y variables como el Programa y, en mayor medida, las Asignaturas, lo que sugiere, en principio, que el tipo de materia/curso es el factor más influyente en el desempeño estudiantil.
-                    <Br><br>
-                    La etapa de entrenamiento del modelo, basada en el algoritmo XGBoost, permitió optimizar el desempeño predictivo a partir de más de 470.000 registros de estudiantes universitarios.
-                    El procedimiento de GridSearchCV y la validación cruzada aseguraron una selección rigurosa de hiperparámetros, alcanzando métricas sólidas (Accuracy = 0.93, Weighted Kappa = 0.90) que garantizan la estabilidad y fiabilidad del modelo.
-                    <br><br>
-                    En la fase de predicción, el sistema demostró una adecuada capacidad de generalización, reflejando resultados consistentes tanto a nivel individual como masivo (por CSV).
-                    Las curvas de aprendizaje confirmaron que el modelo se encuentra en una zona de saturación óptima, sin indicios de sobreajuste o subentrenamiento.
-                    <br><br>
-                    En conclusión, el modelo XGBoost implementado representa una herramienta predictiva robusta y explicativa, capaz de anticipar el rendimiento académico con alta precisión y ofrecer información útil para la toma de decisiones estratégicas en la gestión educativa, promoviendo procesos de mejora continua sustentados en analítica de datos
-                    </P>
-                    </div>
-                    """, unsafe_allow_html=True)
+
+    # Datos de la tabla
+    data = {
+        "Clase": [
+            "Insuficiente",
+            "Deficiente",
+            "Bajo",
+            "Medio",
+            "Alto",
+            "Superior",
+            "accuracy",
+            "macro avg",
+            "weighted avg"
+        ],
+        "precision": [0.87, 0.77, 0.91, 0.94, 0.97, 0.95, None, 0.90, 0.93],
+        "recall":    [0.79, 0.82, 0.91, 0.93, 0.96, 0.97, None, 0.90, 0.93],
+        "f1-score":  [0.82, 0.80, 0.91, 0.94, 0.97, 0.96, None, 0.90, 0.93],
+        "support":   [5121, 6389, 19752, 26722, 33270, 26829, 118083, 118083, 118083]
+    }
+
+    df_metrics = pd.DataFrame(data)
+
+    # Crear dos columnas: una ancha (70%) y una más angosta (30%)
+    col1, col2 = st.columns([2, 2])
+
+    # --- Columna 1: tabla ---
+    with col1:
+        st.markdown("#### 📊 Métricas de Evaluación del Modelo")
+        st.dataframe(
+            df_metrics.style.format({
+                "precision": "{:.2f}",
+                "recall": "{:.2f}",
+                "f1-score": "{:.2f}",
+                "support": "{:,.0f}"
+            })
+            .set_properties(**{"text-align": "center"})
+            .set_table_styles([
+                {"selector": "th", "props": [("text-align", "center"), ("font-weight", "bold")]}
+            ]),
+            use_container_width=False
+        )
+
+        # Mostrar el valor de Kappa
+        st.markdown("Kappa ponderado (test): **0.9037**")
+
+    # --- Columna 2: imagen ---
+    with col2:
+        try:
+            image = Image.open("output.png")
+            st.image(image, use_container_width=False)
+        except FileNotFoundError:
+            st.warning("⚠️ No se encontró la imagen 'output.png'. Verifica la ruta o el nombre del archivo.")
 
 
-def page_refs():
-    # Título 
-    st.markdown("""
-                    <div style='position:fixed; top:40px; left:400px; right:24px; background:#ffffff; padding:10px 16px; z-index:9999; border-bottom:1px solid rgba(0,0,0,0.06);'>
-                    <h1 style='color:#111111; font-weight:700; font-size:45px; margin:0;'>REFERENCIAS BIBLIOGRAFICAS</h1>
-                </div>
-                    <div style='height:64px;'></div>
-                """, unsafe_allow_html=True)
-    #Contenido
-    
-    st.markdown("""
-                    <div>
-                    <p style='color:#444444; text-align:justify; font-size:20px; margin:0 0 12px 0;'> 
-                    <strong>Alyahyan, E., & Düştegör, D. (2020).</strong> Predicting academic success in higher education: literature review and best practices. International Journal of Educational Technology in Higher Education, 17(1), 3.
-                    <br><br>
-                    <strong>Gallego, M. G., Perez de los Cobos, A. P., & Gallego, J. C. G. (2021).</strong> Identifying students at risk to academic dropout in higher education. Education Sciences, 11*(8), 427.
-                    <br><br>
-                    <strong>Imig, P. G. (2020).</strong> Rendimiento académico: un recorrido conceptual que aproxima a una definición unificada para el ámbito superior/Academic performance: a conceptual journey that approximates a unified definition for the higher level. Revista de Educación, (20), 89-104.
-                    <br><br>    
-                    <strong>Pérez, B., Castellanos, C., & Correal, D. (2018, May).</strong> Predicting student drop-out rates using data mining techniques: A case study. In IEEE Colombian Conference on Applications in Computational Intelligence* (pp. 111–125). Cham: Springer International Publishing.
-                    <br><br>
-                    <strong>Rico Páez, A., & Sánchez Guzmán, D. (2018).</strong> Diseño de un modelo para automatizar la predicción del rendimiento académico en estudiantes del IPN. RIDE. Revista Iberoamericana para la Investigación y el Desarrollo Educativo, 8(16), 246-266.
-                    </P>
-                    </div>
-                    """, unsafe_allow_html=True)
 
 # Map routes to functions
 ROUTES = {
-    "Introducción": page_intro,
-    "Objetivos": page_objectives,
     "Exploración de Datos (EDA)": page_eda,
     "Modelo Predicción": page_model,
-    "Conclusiones": page_conclusions,
-    "Referencias": page_refs,
 }
 
 ROUTES[choice]()
