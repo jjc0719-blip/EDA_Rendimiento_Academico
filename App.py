@@ -1141,7 +1141,7 @@ def page_model():
             asignaturas_disp = mapa_prog_asig.get(programa, [])
             asignatura = st.selectbox("Asignatura", options=asignaturas_disp)
             nota2 = st.number_input("Nota 2", value=4.0, step=0.1, format="%.2f")
-            #nota4 = st.number_input("Nota 4", value=4.2, step=0.1, format="%.2f")
+            nota4 = st.number_input("Nota 4", value=4.2, step=0.1, format="%.2f")
 
         if st.button("Predecir Rendimiento"):
             try:
